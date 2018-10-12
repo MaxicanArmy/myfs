@@ -1,0 +1,25 @@
+sudo: false
+language: php
+php:
+- 5.4
+- 5.5
+- 5.6
+env:
+- WP_VERSION=latest
+- WP_VERSION=4.1
+- WP_VERSION=4.0
+- WP_VERSION=3.9
+- WP_VERSION=3.8
+matrix:
+  include:
+  - php: hhvm
+    env: WP_VERSION=latest
+  allow_failures:
+  - php: hhvm
+before_script:
+- composer install
+- bash tests/install-wp-tests.sh wordpress_test root '' localhost $WP_VERSION
+script: phpunit
+notifications:
+  slack:
+    secure: MP5IJAiD3l6CErCBBgD27XjI0aLG/zY7ssKP2bRvkc/0pM1McBqTGJ5Ytmwbx4rOSkO4lecf6BQwyriDN06mnvS+IIDxgrBdJ/yOeMI5wmRcXhWDQpGnTcddwd9TNwJiyJDigQj51i73h5TD2WHGC6LhOpdwrdVOtgU0R2781ds=

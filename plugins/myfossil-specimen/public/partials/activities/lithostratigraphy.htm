@@ -1,0 +1,28 @@
+<div class="fossil-change">
+    <h4>Lithostratigraphy</h4>
+
+{% if from is not null %}
+    <div class="from">
+        <h5>From</h5>
+        <p class="fossil-property">
+            {{- from.level -}}
+        </p>
+        {{- from.name -}}
+    </div>
+{% endif %}
+
+{% if to is not null %}
+    {% if from is not null %}
+    <div class="to">
+    {% else %}
+    <div>
+    {% endif %}
+        <h5>To</h5>
+        <p class="fossil-property">
+            {{- to.level -}}
+        </p>
+        {{- to.name -}}
+    </div>
+{% endif %}
+
+</div>

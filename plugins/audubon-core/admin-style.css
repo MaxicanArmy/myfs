@@ -1,0 +1,61 @@
+.ac-admin-tab {
+	margin-right:20px;
+}
+
+table.ac-classes {
+	width:50%;
+	border-collapse: collapse;
+}
+
+table.ac-classes input {
+	width:100%;
+}
+
+table.ac-terms {
+	width:100%;
+	border-collapse: collapse;
+}
+
+table.ac-terms tbody {
+	border: 2px dashed #000000;
+}
+
+table.ac-terms tbody tr.ac-term-placeholder td {
+	padding:20px 0;
+}
+
+table.ac-terms td {
+	padding: 5px 0;
+}
+
+table.ac-terms tr.row-even {
+	background-color: #cccccc;
+}
+
+table.ac-terms input, table.ac-terms select {
+	display:block;
+	margin:auto;
+}
+
+table.ac-terms input[type="text"], table.ac-terms select {
+	width:95%;
+}
+
+th.ac-class-heading {
+	text-align:left;
+}
+
+div.class-sort-container {
+	float:left;
+	margin-right:20px;
+	padding:12px 16px 12px 4px;
+	background-color:#ffffff;
+}
+
+ul.class-sort {
+	padding:4px;
+	border:2px dashed #000000;
+	display:inline-block;
+	min-height:50px;
+	width:100%;
+}

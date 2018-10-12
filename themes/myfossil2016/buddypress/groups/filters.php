@@ -1,0 +1,47 @@
+<?php
+/**
+ * Modifies leave/join group button template
+ *
+ * @see myfossil/includes/filters.php
+ */
+function filter_bp_group_join_button( $btn ) {
+    $btn_txt_leave = 'Leave Group';
+    $btn_txt_join = 'Follow Group';
+    $is_member = $btn['link_text'] == 'Leave Group';
+
+    $btn['must_be_logged_in'] = true;
+    $btn['link_text'] = $is_member ? $btn_txt_leave : $btn_txt_join;
+    $btn['link_id'] = "join";
+
+    $btn['link_class'] .= " btn-block";
+    
+    return $btn;
+}
+add_filter( 'bp_get_group_join_button', 'filter_bp_button' );
+add_filter( 'bp_get_group_join_button', 'filter_bp_group_join_button' );
+
+
+/**
+ * Customize the search form for group listing...
+ */
+function filter_bp_directory_groups_search_form( $html ) {
+    return <<<EOT
+        <div class="item-list-tabs bps_header">
+          <ul class="not-list">
+            <li><label for="groups-Search" class="label-control">Search:</label></li>
+          </ul>
+        </div>
+        <form action="" method="get" id="search-groups-form" _lpchecked="1" class="form">
+            <div class="form-group">    
+                <label><input type="text" name="s" id="groups_search" placeholder="Search Groups..." class="form-control"></label>
+                
+
+                 <button class="btn btn-primary btn-search" role="button" ><span class="fa-stack">                        
+                            <i class="fa fa-search fa-stack-1x fa-inverse"></i>
+                        </span>Search groups</button>
+
+            </div>
+        </form>
+EOT;
+}
+add_filter( 'bp_directory_groups_search_form', 'filter_bp_directory_groups_search_form');

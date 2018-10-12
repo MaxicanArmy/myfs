@@ -1,0 +1,35 @@
+<div class="fossil-change">
+    {% if from.first is not null %}
+        <h4>{{- from.first -}}</h4>
+    {% endif %}
+{% if from is not null %}
+    <div class="from">
+        <h5>From</h5>
+        <p class="fossil-property">
+            {{- from.rank -}}
+        </p>
+        {%- if from.pbdb.image_no is defined -%}
+            <img src="//paleobiodb.org/data1.1/taxa/thumb.png?id={{ from.pbdb.image_no }}" alt="phylopic rendering of {{ from.name }}" class="phylopic" />
+        {%- endif -%}
+        {{- from.name -}}
+    </div>
+{% endif %}
+
+{% if to is not null %}
+    {% if from is not null %}
+    <div class="to">
+    {% else %}
+    <div>
+    {% endif %}
+        <h5>To</h5>
+        <p class="fossil-property">
+            {{- to.rank -}}
+        </p>
+        {%- if to.pbdb.image_no is defined -%}
+            <img src="//paleobiodb.org/data1.1/taxa/thumb.png?id={{ to.pbdb.image_no }}" alt="phylopic rendering of {{ to.name }}" class="phylopic" />
+        {%- endif -%}
+        {{- to.name -}}
+    </div>
+{% endif %}
+
+</div>

@@ -1,0 +1,170 @@
+/*
+Theme Name  : myFOSSIL2016
+Theme URI   : https://github.com/myfossil/myfossil-theme
+Author      : myFOSSIL
+Author URI  : https://github.com/myfossil
+Description : Theme for the myFOSSIL WordPress + BuddyPress site
+Version     : 0.3.1
+License     : GNU General Public License v2 or later
+License URI : http://www.gnu.org/licenses/gpl-2.0.html
+Text Domain : myfossil2016
+
+This theme, like WordPress, is licensed under the GPL.
+
+myfossil is based on Underscores http://underscores.me/, (C) 2012-2014
+Automattic, Inc.
+
+Resetting and rebuilding styles have been helped along thanks to the fine work
+of Eric Meyer http://meyerweb.com/eric/tools/css/reset/index.html along with
+Nicolas Gallagher and Jonathan Neal http://necolas.github.com/normalize.css/
+and Blueprint http://www.blueprintcss.org/
+*/
+body {
+  padding-top: 71px;
+}
+
+#content {
+  margin: 20px;
+}
+
+/**
+ * NAVIGATION LINKS
+ */
+@media (min-width: 992px) {
+  .navbar-nav > li > a {
+    padding-top: 24px;
+    padding-bottom: 24px; 
+  }
+
+  #dropdown-menu-user {
+    padding-top: 10px;
+    padding-bottom: 10px; 
+  }
+}
+
+.navbar {
+  border-bottom: 1px solid #cccccc;
+  font-family: "Source Sans Pro", Helvetica, Arial, sans-serif;
+  color: #808080;
+  font-size: 16px;
+  line-height:22px;
+}
+
+a.navbar-brand {
+  display: inline-block;
+  width: 260px;
+  float: left;
+  padding: 14px 15px;
+  font-size: 20px;
+  line-height: 22px;
+  height: 70px;
+  background-image: url("/wp-content/themes/myfossil/static/img/nav/myfossil-logo-home.png");
+  background-repeat: no-repeat;
+  background-position: center center;
+  text-indent: -1000px;
+}
+
+#header-nav .navbar-nav li a {
+  text-transform: uppercase;
+  font-style: normal;
+  color: #808080;
+  line-height: 22px;
+}
+
+#header-nav .navbar-nav li a:hover, #header-nav .navbar-nav li.active a {
+  background:none;
+  box-shadow:none;
+  color: #333333;
+}
+
+#header-nav .navbar-nav li a:hover span, #header-nav .navbar-nav li.active a span {
+  border-bottom: 2px solid #eba047;
+}
+
+#header-bp-nav.dropdown-menu > li > a:hover {
+  background-color: #f5f5f5;
+}
+/*
+.navbar-nav#nav-main li a.selected, .navbar-nav#nav-main li a.active, .navbar-nav#nav-main li a.current, .navbar-nav#nav-main li a:hover {
+    color: #333333; }
+
+.navbar-nav#nav-main li a.selected span, .navbar-nav#nav-main li.active a span, .navbar-nav#nav-main li a.active span, .navbar-nav#nav-main li a.current span, .navbar-nav#nav-main li a:hover span {
+      border-bottom: 2px solid #eba047; }
+*/
+
+/**
+ * DROPDOWN MENUS
+ */
+ @media (min-width: 992px) {
+  .navbar-right .dropdown-menu {
+    right: 0;
+    left: auto; }
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 1000;
+  display: none;
+  float: left;
+  min-width: 160px;
+  padding: 5px 0;
+  margin-top: 2px 0 0;
+  list-style: none;
+  font-size: 16px;
+  text-align: left;
+  background-color: #fff;
+  border: 1px solid #ccc;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 3px;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.175);
+  background-clip: padding-box; }
+
+.dropdown-menu li a:hover {
+  text-decoration:none;
+}
+
+.dropdown-menu > li > a {
+  display: block;
+  padding: 3px 20px;
+  clear: both;
+  font-weight: normal;
+  line-height: 1.42857;
+  white-space: nowrap;
+}
+
+.open > .dropdown-menu {
+  display: block;
+}
+
+/**
+ * NOTIFICATION ALERT STYLING
+ */
+#notifications {
+  font-size: 22px;
+  padding-bottom:0px;
+}
+
+/**
+ * AVATAR STYLING
+ */
+.avatar {
+  border-radius: 3px;
+}
+
+.avatar-25, .avatar-30 {
+  border-radius: 30px;
+}
+
+.avatar-50 {
+  border-radius: 50px;
+}
+
+.avatar-100 {
+  border-radius: 100px;
+}
+
+.avatar-, .avatar-150 {
+  border-radius: 150px;
+}

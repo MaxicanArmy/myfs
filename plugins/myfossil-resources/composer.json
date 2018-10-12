@@ -1,0 +1,24 @@
+{
+    "name": "myfossil/wp-plugin-resources",
+    "description": "WordPress plugin that adds Places and Events management",
+    "license": "BSD",
+    "keywords": ["myfossil", "places", "events"],
+    "authors": [
+        {
+            "name": "Brandon Wood",
+            "email": "bwood@atmoapps.com"
+        }
+    ],
+    "require": {
+        "php": ">=5.4.0",
+        "anahkiasen/rocketeer": "~2.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "4.*"
+    },
+    "autoload": {
+        "psr-4": {
+            "myFOSSIL\\Plugins\\Resources\\": "src"
+        }
+    }
+}

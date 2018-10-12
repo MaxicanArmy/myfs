@@ -1,0 +1,34 @@
+<div class="fossil-change">
+    <h4>Location</h4>
+
+{% if from is not null %}
+    <div class="from">
+        <h5>From</h5>
+        {% for k in from.get_meta_keys() %}
+            {% if attribute( from, k ) %}
+                <span class="fossil-property">{{ k }}</span> {{ attribute( from, k ) }}
+            {% elseif attribute( to, k ) %}
+                <span class="fossil-property">{{ k }}</span> &nbsp;
+            {% endif %}
+        {% endfor %}
+    </div>
+{% endif %}
+
+{% if to is not null %}
+    {% if from is not null %}
+    <div class="to">
+    {% else %}
+    <div>
+    {% endif %}
+        <h5>To</h5>
+        {% for k in to.get_meta_keys() %}
+            {% if attribute( to, k ) %}
+                <span class="fossil-property">{{ k }}</span> {{ attribute( to, k ) }}
+            {% elseif attribute( from, k ) %}
+                <span class="fossil-property">{{ k }}</span> &nbsp;
+            {% endif %}
+        {% endfor %}
+    </div>
+{% endif %}
+
+</div>

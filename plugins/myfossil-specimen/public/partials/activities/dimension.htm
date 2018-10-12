@@ -1,0 +1,42 @@
+<div class="fossil-change">
+    <h4>Dimensions</h4>
+
+{% if from.length or to.length %}
+    <div class="from">
+        <h5>From</h5>
+                {% if from.length or to.length %}<p class="fossil-property">Length</p>{% endif %}
+                {% if from.length %}{{ from.length }} m{% endif %}
+    </div>
+    <div class="to">
+        <h5>To</h5>
+
+                {% if to.length or from.length %}<p class="fossil-property">Length</p>{% endif %}
+                {% if to.length %}{{ to.length }} m{% endif %}
+    </div>
+{% endif %}
+{% if from.width or to.width %}
+    <div class="from">
+        <h5>From</h5>
+                {% if from.width or to.width %}<p class="fossil-property">Width</p>{% endif %}
+                {% if from.width %}{{ from.width }} m{% endif %}
+    </div>
+    <div class="to">
+        <h5>To</h5>
+                {% if to.width or from.width %}<p class="fossil-property">Width</p>{% endif %}
+                {% if to.width %}{{ to.width }} m{% endif %}
+    </div>
+{% endif %}
+{% if from.height or to.height %}
+    <div class="from">
+        <h5>From</h5>
+                {% if from.height or to.height %}<p class="fossil-property">Height</p>{% endif %}
+                {% if from.height %}{{ from.height }} m{% endif %}
+    </div>
+    <div class="to">
+        <h5>To</h5>
+                {% if to.height or from.height %}<p class="fossil-property">Height</p>{% endif %}
+                {% if to.height %}{{ to.height }} m{% endif %}
+    </div>
+{% endif %}
+
+</div>

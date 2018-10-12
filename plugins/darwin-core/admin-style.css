@@ -1,0 +1,61 @@
+.dwc-admin-tab {
+	margin-right:20px;
+}
+
+table.dwc-classes {
+	width:50%;
+	border-collapse: collapse;
+}
+
+table.dwc-classes input {
+	width:100%;
+}
+
+table.dwc-terms {
+	width:100%;
+	border-collapse: collapse;
+}
+
+table.dwc-terms tbody {
+	border: 2px dashed #000000;
+}
+
+table.dwc-terms tbody tr.dwc-term-placeholder td {
+	padding:20px 0;
+}
+
+table.dwc-terms td {
+	padding: 5px 0;
+}
+
+table.dwc-terms tr.row-even {
+	background-color: #cccccc;
+}
+
+table.dwc-terms input, table.dwc-terms select {
+	display:block;
+	margin:auto;
+}
+
+table.dwc-terms input[type="text"], table.dwc-terms select {
+	width:95%;
+}
+
+th.dwc-class-heading {
+	text-align:left;
+}
+
+div.class-sort-container {
+	float:left;
+	margin-right:20px;
+	padding:12px 16px 12px 4px;
+	background-color:#ffffff;
+}
+
+ul.class-sort {
+	padding:4px;
+	border:2px dashed #000000;
+	display:inline-block;
+	min-height:18px;
+	width:100%;
+}
