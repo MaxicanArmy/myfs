@@ -389,11 +389,20 @@ function myfossil_login_remove_styles() {
 add_action( 'login_enqueue_scripts', 'myfossil_login_remove_styles', 0 );
 add_action( 'wp_enqueue_scripts', 'myfossil_login_remove_styles', 0 );
 */
+
 /**
  * Includes
  */
+
+/*
+ * Swapped these files out and changed them to bp-group-filters.php and bp-members-filters.php so that the theme isn't dependent on buddypress folder and subfolders
+ *
 require get_template_directory() . '/buddypress/groups/filters.php';
 require get_template_directory() . '/buddypress/members/filters.php';
+ */
+require get_template_directory() . '/includes/bp-groups-filters.php';
+require get_template_directory() . '/includes/bp-members-filters.php';
+
 
 /**
  * bbPress
