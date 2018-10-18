@@ -49,7 +49,6 @@
   <div id="content" class="site-content">
 <?php 
 if (is_user_logged_in()) {
-  echo "<!-- testing -->";
   if (strpos($_SERVER['HTTP_USER_AGENT'], 'Chrome') === false && strpos($_SERVER['HTTP_USER_AGENT'], 'CriOS') === false) {
     echo do_shortcode("[sg_popup id=1]");
   }
