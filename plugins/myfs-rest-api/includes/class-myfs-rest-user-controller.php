@@ -518,7 +518,7 @@ class MYFS_REST_User_Controller extends WP_REST_Controller {
 		$request['field_5'] = $request['field_203'];
 
 		foreach ( $required as $req ) {
-			if ( empty( $request['field_'.$req] ) ) {
+			if ( $request->get_param('field_'.$req) === NULL || (!is_array($request['field_'.$req]) && empty( trim( $request['field_'.$req]) ) ) || empty( $request['field_'.$req] ) ) {
 				return new WP_Error( 'missing_required_registration_field' , __( 'This is a required field ['.$req.'].' ), array( 'status' => 400 ));
 			}
 		}
