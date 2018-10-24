@@ -453,7 +453,12 @@ class MYFS_REST_Activity_Controller extends WP_REST_Controller {
 					preg_match( "#\.([A-Za-z]+)$#", $resource_url, $matches );
 					update_post_meta( $ac_id, 'resource_ext', strtolower($matches[1]) );
 					update_post_meta( $ac_id, 'resource_url', preg_replace('#^https?:#', '', $resource_url ) );
-					update_post_meta( $ac_id, 'description', $_POST["content-".$key] );
+					//update_post_meta( $ac_id, 'description', $_POST["content-".$key] );
+					if ( strpos( $key, 'image' ) === 0 ) {	//this supports the older version of the app that had problems with cached images of deleted items overriding new uploads
+						update_post_meta( $ac_id, 'description', $_POST['content'.str_replace( 'image', '', $key )] );
+					} else {
+						update_post_meta( $ac_id, 'description', $_POST["content-".$key] );
+					}
 
 					$result->ac_media[] = $ac_id;
 					$result->atts[] = $attach_id;
@@ -567,7 +572,11 @@ class MYFS_REST_Activity_Controller extends WP_REST_Controller {
 				preg_match( "#\.([A-Za-z]+)$#", $resource_url, $matches );
 				update_post_meta( $ac_id, 'resource_ext', strtolower($matches[1]) );
 				update_post_meta( $ac_id, 'resource_url', preg_replace('#^https?:#', '', $resource_url ) );
-				update_post_meta( $ac_id, 'description', $_POST["content-".$key] );
+				if ( strpos( $key, 'image' ) === 0 ) {	//this supports the older version of the app that had problems with cached images of deleted items overriding new uploads
+					update_post_meta( $ac_id, 'description', $_POST['content'.str_replace( 'image', '', $key )] );
+				} else {
+					update_post_meta( $ac_id, 'description', $_POST["content-".$key] );
+				}
 
 				$result->ac_media[] = $ac_id;
 				$result->atts[] = $attach_id;
@@ -623,13 +632,20 @@ class MYFS_REST_Activity_Controller extends WP_REST_Controller {
 				break;
 
 			case "app_image_update" :
-
-				foreach ($_FILES as $key => $value) {
+			
+				/*
+				 * this only works for single image uploads, if they change to multiple uploads in the future then we will need to put all of the $success IDs in the shortcode
+				 */
+				foreach ($_FILES as $key => $value) { 
 					$success = self::save_app_image( $user_id, $key ); //returns ID of the new wp_attachment, can make this return an object if I need more data
 
 					if ($success) {
 						$args['action'] = "<a href='{$user_link}'>{$username}</a> posted an image in the group <a href='{$group_link}'>{$group->name}</a> from the myFOSSIL app";
-						$args['content'] = $_POST["content-".$key] . "\n[myfs-app-image id=".$success."]";
+						if ( strpos( $key, 'image' ) === 0 ) {	//this supports the older version of the app that had problems with cached images of deleted items overriding new uploads
+							$args['content'] = $_POST['content1'] . "\n[myfs-app-image id=".$success."]";
+						} else {
+							$args['content'] = $_POST["content-".$key] . "\n[myfs-app-image id=".$success."]";
+						}
 					}
 				}
 				break;
@@ -790,8 +806,8 @@ class MYFS_REST_Activity_Controller extends WP_REST_Controller {
 					$new_activity->images = null;
 					$new_activity->metadata = $specimen->json_meta();
 
-					$temp_comments = get_comments( array( "post_id" => $activity->secondary_item_id ) );
-					$new_activity->comment_count = count($temp_comments);
+					//$temp_comments = get_comments( array( "post_id" => $activity->secondary_item_id ) );
+					//$new_activity->comment_count = count($temp_comments);
 
 					$ac_args = array(
 						'post_parent' => $activity->secondary_item_id,
@@ -809,7 +825,7 @@ class MYFS_REST_Activity_Controller extends WP_REST_Controller {
 
 						$new_image_data = new stdClass();
 						$new_image_data->id = $current_media->ID;
-						$new_image_data->content = ( $meta["description"][0] == null ) ? '' : $meta["description"][0];
+						$new_image_data->content = ( $meta["description"][0] == null ) ? '' : stripslashes_deep( $meta["description"][0] );
 						$new_image_data->thumb_url = myfs_core_prepend_https( wp_get_attachment_image_src( $attachment->ID )[0] );
 						$new_image_data->url = myfs_core_prepend_https( wp_get_attachment_image_src( $attachment->ID, 'full' )[0] );
 						$new_activity->images[] = $new_image_data;
@@ -823,7 +839,7 @@ class MYFS_REST_Activity_Controller extends WP_REST_Controller {
 						$new_image_data->content = preg_replace( "#\[myfs-app-image id\=[0-9]+\]#", "", $content );
 						$new_image_data->url = wp_get_attachment_image_src( $image_id[1], 'full' )[0];
 
-						$new_image_data->content = ( $new_image_data->content == null ) ? '' : $new_image_data->content;
+						$new_image_data->content = ( $new_image_data->content == null ) ? '' : stripslashes_deep( $new_image_data->content );
 						$new_activity->images[] = $new_image_data;
 					} else {
 						$content = strip_tags( str_replace( array( "\r", "\n" ), "", $activity->content) );
@@ -833,10 +849,10 @@ class MYFS_REST_Activity_Controller extends WP_REST_Controller {
 							$new_image_data->url = myfs_core_prepend_https( $image_urls[1] );
 							$new_image_data->content = strip_tags( preg_replace( "#\[bpfb_images\].*\[/bpfb_images\]#", "", $content ) );
 
-							$new_image_data->content = ( $new_image_data->content == null ) ? '' : $new_image_data->content;
+							$new_image_data->content = ( $new_image_data->content == null ) ? '' : stripslashes_deep( $new_image_data->content );
 							$new_activity->images[] = $new_image_data;
 						} else {
-							$new_activity->content = strip_tags( $activity->content );
+							$new_activity->content = stripslashes_deep( strip_tags( $activity->content ) );
 						}
 					}
 				}
@@ -851,7 +867,7 @@ class MYFS_REST_Activity_Controller extends WP_REST_Controller {
 						$new_comment->author_nicename = $comment->user_nicename;
 						$new_comment->author_avatar = myfs_core_prepare_avatar_url( get_avatar_url( $comment->user_id ) );
 						$new_comment->post_time = strtotime($comment->date_recorded);
-						$new_comment->content = strip_tags( $comment->content );
+						$new_comment->content = stripslashes_deep( strip_tags( $comment->content ) );
 
 						$new_activity->comments[] = $new_comment;
 					}
