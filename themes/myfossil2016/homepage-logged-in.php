@@ -141,9 +141,6 @@
                             'orderby'          => 'date',
                             'order'            => 'DESC',
                             'post_type'        => array( 'reply' ),
-                            'date_query'       => array(
-                                                    array(
-                                                        'after' => '2 months ago') ),
                             'post_status'      => 'publish'
                         );
                         // The Query
