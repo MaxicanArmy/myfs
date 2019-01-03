@@ -10,6 +10,95 @@
 defined( 'ABSPATH' ) || exit;
 
 /**
+ * Get number of specimens uploaded in the last x days
+ *
+ * @since 1.0.0
+ *
+ */
+function myfs_core_recent_specimen_count( $days ) {
+	$args = array(
+        'orderby'          => 'date',
+        'order'            => 'DESC',
+        'post_type'        => array( 'myfossil_fossil' ),
+        'date_query'       => array(
+                                array(
+                                    'after' => $days.' days ago') ),
+        'post_status'      => 'publish'
+    );
+    // The Query
+    $the_query = new WP_Query( $args );
+    
+    // The Loop
+    if ( $the_query->have_posts() ) {
+        $new_fossils = $the_query->found_posts;
+    } else {
+        $new_fossils = 0;
+    }
+    /* Restore original Post Data */
+    wp_reset_postdata();
+
+    return $new_fossils;
+}
+
+/**
+ * Get number of forum posts made in the last x days
+ *
+ * @since 1.0.0
+ *
+ */
+function myfs_core_recent_forum_post_count( $days ) {
+    $args = array(
+        'orderby'          => 'date',
+        'order'            => 'DESC',
+        'post_type'        => array( 'reply' ),
+        'date_query'       => array(
+                                array(
+                                    'after' => $days.' days ago') ),
+        'post_status'      => 'publish'
+    );
+    // The Query
+    $the_query = new WP_Query( $args );
+    
+    // The Loop
+    if ( $the_query->have_posts() ) {
+        $new_forums = $the_query->found_posts;
+    } else {
+        $new_forums = 0;
+    }
+    /* Restore original Post Data */
+    wp_reset_postdata();
+
+    return $new_forums;
+}
+
+/**
+ * Get number of members joined in the last x days
+ *
+ * @since 1.0.0
+ *
+ */
+function myfs_core_recent_member_count( $days ) {
+    $args = array(
+        'date_query'       => array(
+                                array(
+                                    'after' => $days.' days ago') )
+    );
+    // The Query
+    $user_query = new WP_User_Query( $args );
+    
+    // The Loop
+    if ( ! empty( $user_query->results ) ) {
+        $new_members = $user_query->total_users;
+    } else {
+        $new_members = 0;
+    }
+    /* Restore original Post Data */
+    wp_reset_postdata();
+
+    return $new_members;
+}
+
+/**
  * Prepend https:// || http:// to urls
  *
  * @since 1.0.0
