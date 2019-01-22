@@ -5,6 +5,7 @@
             <p>We're building a community of amateur and professional paleontologists.<br />
             <a id="hero-image-register" href="/register/"><img src="<?php bloginfo('stylesheet_directory'); ?>/static/img/join-2x.png" /></a><br />
             <a id="hero-image-login" href="<?=wp_login_url( get_permalink() ); ?>">Already a member of myFOSSIL? Login</a>
+            <a id="hero-image-login" href="/what-is-myfossil">Watch our video to learn more!</a>
             </p>
         </div>
     </div>
@@ -28,7 +29,7 @@
         </div>
     </div>
     <div id="mission-statement">
-        <h5>F.O.S.S.I.L &ndash; Fostering Opportunities for Synergistic STEM with Informal Learners</h5>
+        <h5>FOSSIL &ndash; Fostering Opportunities for Synergistic STEM with Informal Learners</h5>
         <p>Connect with professional paleontologists, students, amateur/avocational paleontologists, educators, and more in our online paleontological community. Join interest groups and start learning together.</p>
     </div>
     <div id="featured-fossil">
