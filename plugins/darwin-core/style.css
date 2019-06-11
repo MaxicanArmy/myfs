@@ -1,23 +1,39 @@
 #darwin-core {
-	margin-top:20px;
-}
-
-#darwin-core h1 {
-	font-size: 3em !important;
+	padding:0 0 30px 0;
+	font-family:sans-serif;
 }
 
 #darwin-core p {
 	font-size:16px;
-	font-weight:bold;
 }
 
 .dwc-helper {
 	float:right;
 }
 
+#dwc-improve-fossil-taxon {
+	background-color: #ffffff;
+	border:1px solid #cccccc;
+	padding:20px;
+	border-radius:3px;
+	display:none;
+}
+
 #edit-fossil-taxon-results {
 	list-style:none;
 	padding-left:0px;
+}
+
+ul#edit-fossil-taxon-results li {
+	min-height:64px;
+}
+
+#dwc-improve-fossil-geochronology {
+	background-color: #ffffff;
+	border:1px solid #cccccc;
+	padding:20px;
+	border-radius:3px;
+	display:none
 }
 
 .dwc-row {
@@ -31,7 +47,6 @@
 	font-weight:normal;
 	color:#165978;
 	display:inline-block;
-	font-family:"Source Sans Pro", Helvetica, Arial, sans-serif;
 	text-transform:uppercase;
 }
 
@@ -61,11 +76,11 @@
 	padding:10px;
 }
 
-#darwin-core #specimen-archive-list {
+#specimen-archive-list {
 	margin-top:20px;
 }
 
-#darwin-core #specimen-archive-list .dwc-gallery-thumb {
+#specimen-archive-list .dwc-gallery-thumb {
 	max-width:100px;
 }
 
@@ -75,7 +90,6 @@
 }
 
 #specimen-archive-list th {
-	font-family: "Source Sans Pro", Helvetica, Arial, sans-serif;
     font-weight: bold;
     text-transform: uppercase;
     color: #165978;
@@ -83,7 +97,6 @@
 }
 
 #specimen-archive-list span.term {
-    font-family: "Source Sans Pro", Helvetica, Arial, sans-serif;
 	font-weight: lighter;
     text-transform: uppercase;
     color: #165978;
@@ -91,28 +104,27 @@
 }
 
 #specimen-archive-list span.term-value {
-    font-family: "Source Sans Pro", Helvetica, Arial, sans-serif;
     color: #9b9b9b;
 }
-/*
-.dwc-input:disabled::-webkit-input-placeholder {
-	color:#cccccc !important;
+
+/* Large devices (desktops, less than 1200px) */
+@media (max-width: 1199.98px) {
+
 }
-.dwc-input::-webkit-input-placeholder, .dwc-full-input::-webkit-input-placeholder { // WebKit browsers 
-	color:#cccccc;
-	opacity: .6 !important;
+/* Medium devices (tablets, less than 992px) */
+@media (max-width: 991.98px) {
+
 }
 
-.dwc-input:disabled::-webkit-input-placeholder, .dwc-full-input:disabled::-webkit-input-placeholder { // WebKit browsers 
-	color:#cccccc !important;
-	opacity: .6 !important;
+/* Small devices (landscape phones, less than 768px) */
+@media (max-width: 767.98px) {
+
 }
 
-textarea.dwc-input {
-	width:100%;
-	font-size:1.1em;
+/* Extra small devices (portrait phones, less than 576px) */
+@media (max-width: 575.98px) {
+
 }
-*/
 
 .stl-row {
 	margin-top:10px;
@@ -125,24 +137,7 @@ textarea.dwc-input {
 a.ajax-btn:visited {
 	color:#ffffff;
 }
-/*
-.ac-placeholder {
-	margin-top:20px;
-	width:320px;
-	height:320px;
-	background-color:#ffffff;
-	text-align:center;
-	vertical-align:middle;
-	position:relative;
-}
 
-.ac-placeholder-text {
-	position:absolute;
-	top:50%;
-	transform:translateY(-50%);
-	width:100%;
-}
-*/
 .slick-holder {
 	width:320px;
 	margin:auto;
@@ -151,11 +146,7 @@ a.ajax-btn:visited {
 .slick-prev:before, .slick-next:before {
 	color:#000000;
 }
-/*
-.ac-wrapper img {
-	margin:auto;
-}
-*/
+
 #darwin-core .owner-actions {
 	border-bottom:1px solid #cccccc;
 	padding-bottom:20px;
@@ -164,26 +155,6 @@ a.ajax-btn:visited {
 
 #darwin-core .slick-holder {
 	min-height:335px;
-}
-
-#dwc-improve-fossil-taxon {
-	background-color: #ffffff;
-	border:1px solid #cccccc;
-	padding:20px;
-	border-radius:3px;
-	display:none;
-}
-
-ul#edit-fossil-taxon-results li {
-	min-height:64px;
-}
-
-#dwc-improve-fossil-geochronology {
-	background-color: #ffffff;
-	border:1px solid #cccccc;
-	padding:20px;
-	border-radius:3px;
-	display:none
 }
 
 #darwin-core-update-specimen {
@@ -202,99 +173,11 @@ ul#edit-fossil-taxon-results li {
 	color:#0047b3;
 }
 
-/*==========  Mobile First Method  ==========*/
 
-/* Custom, iPhone Retina */ 
-@media only screen and (min-width : 320px) {
-
-}
-
-/* Extra Small Devices, Phones */ 
-@media only screen and (min-width : 480px) {
-
-}
-
-/* Small Devices, Tablets */
-@media only screen and (min-width : 768px) {
-
-}
-
-/* Medium Devices, Desktops */
-@media only screen and (min-width : 992px) {
-	.dwc-row 
-		padding:5px;
-	}
-
-	.dwc-label, .dwc-input, .dwc-input, .dwc-full-input {
-		font-size:1.2em;
-	}
-}
-
-/* Large Devices, Wide Screens */
-@media only screen and (min-width : 1200px) {
-	.dwc-label, .dwc-input, textarea.dwc-input {
-		font-size:1.3em;
-	}
-
-	.dwc-label {
-		width:20%;
-	}
-
-	.dwc-input {
-		width:80%;
-	}
-}
-
-/*
-DRAG N DROP STYLES
-#darwin-core.single #dwc-dragndrop {border:2px dotted #0B85A1;min-height:50px;width:100%;color:#92AAB0;text-align:left;vertical-align:middle;padding:10px 10px 10px 10px;margin:auto;margin-bottom:10px;font-size:200%;}
-#darwin-core.single #dwc-dragndrop p {text-align:center;vertical-align:middle;line-height:50px;margin-bottom:0px;}
-#darwin-core.wizard #dwc-dragndrop {border:2px dotted #0B85A1;min-height:200px;width:700px;color:#92AAB0;text-align:left;vertical-align:middle;padding:10px 10px 10px 10px;margin:auto;margin-bottom:10px;font-size:200%;}
-#darwin-core.wizard #dwc-dragndrop p {text-align:center;vertical-align:middle;line-height:200px;}
-#darwin-core .progressBar {width:200px;height:22px;border:1px solid #ddd;border-radius:5px;overflow:hidden;display:inline-block;margin:0px 10px 5px 5px;vertical-align:top;}
-#darwin-core .progressBar div {min-height:100%;height:22px;color:#fff;text-align:right;line-height:22px;width:0;background-color:#0ba1b5;border-radius:3px;}
-#darwin-core .statusbar {border-top:1px solid #a9ccd1;min-height:25px;width:700px;padding:10px 10px 0px 10px;vertical-align:top;margin:auto;}
-#darwin-core .statusbar:nth-child(odd) {background:#EBEFF0;}
-#darwin-core .filename {display:inline-block;vertical-align:top;width:250px;}
-#darwin-core .filesize {display:inline-block;vertical-align:top;color:#30693D;width:100px;margin-left:10px;margin-right:5px;}
-#darwin-core .abort{background-color:#A8352F;-moz-border-radius:4px;-webkit-border-radius:4px;border-radius:4px;display:inline-block;color:#fff;font-family:arial;font-size:13px;font-weight:normal;padding:4px 15px;cursor:pointer;vertical-align:top}
-
-#darwin-core #step-2-wrapper, #darwin-core #step-3-wrapper {
-	display:none;
-}
-*/
-
-#darwin-core.wizard .inactive {
-	display:none;
-}
-
-
-/*
-DRAG N DROP STYLES
-*/
-.wizard #dwc-dragndrop, .wizard #dwc-dragndrop-thumb {
-	border:2px dotted #0b85a1;
-	min-height:200px;
-	/*width:700px;*/
-	color:#888888;
-	text-align:left;
-	vertical-align:middle;
-	padding:10px 10px 10px 10px;
-	margin:auto;
-	margin-bottom:10px;
-	font-size:200%;
-}
-
-.wizard #dwc-dragndrop p, .wizard #dwc-dragndrop-thumb p {
-	text-align:center;
-	vertical-align:middle;
-	line-height:200px;
-}
-
-#dwc-dragndrop, #dwc-dragndrop-thumb {
+#dwc-dragndrop, #dwc-dragndrop-thumb, #dwc-dragndrop-loading {
 	border:2px dotted #0b85a1;
 	min-height:50px;
-	width:100%;
+	width:50%;
 	color:#888888;
 	text-align:left;
 	vertical-align:middle;
@@ -304,7 +187,11 @@ DRAG N DROP STYLES
 	font-size:200%;
 }
 
-#dwc-dragndrop p, #dwc-dragndrop-thumb p {
+#dwc-dragndrop-loading {
+	display:none;
+}
+
+#dwc-dragndrop p, #dwc-dragndrop-loading p, #dwc-dragndrop-thumb p {
 	text-align:center;
 	vertical-align:middle;
 	line-height:50px;
@@ -372,7 +259,6 @@ DRAG N DROP STYLES
 	border-radius:4px;
 	display:inline-block;
 	color:#fff;
-	font-family:arial;
 	font-size:13px;
 	font-weight:normal;
 	padding:4px 15px;
@@ -386,4 +272,207 @@ DRAG N DROP STYLES
 
 .slick-slide {
 	height: inherit !important;
+}
+
+#dwc-specimen-header {
+	min-height:100px;
+	background-color:#333333;
+	color:#ffffff;
+}
+
+#dwc-specimen-header .container {
+	padding:20px 40px;
+}
+
+#dwc-specimen-header #dwc-specimen-header-id {
+	font-size:15pt;
+}
+
+#dwc-specimen-nav {
+	margin:auto;
+}
+
+#dwc-specimen-nav li {
+	list-style: none;
+	float:left;
+	padding:30px 15px;
+}
+
+#dwc-specimen-nav li a {
+	padding:10px;
+	text-decoration:none;
+}
+
+#dwc-specimen-nav li.active {
+	background: url("images/arrow.png") no-repeat center bottom;
+}
+
+#dwc-specimen-nav li.hascontent a {
+	color:#ffffff;
+	padding:10px;
+	background-color: #0085ba;
+  position: relative;
+}
+#dwc-specimen-nav li.hascontent a:before {
+  content: " ";
+  position: absolute;
+  display: block;
+	margin-left:-23px;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  z-index: -1;
+  background: #0085ba;
+  transform-origin: bottom left;
+  -ms-transform: skew(-30deg, 0deg);
+  -webkit-transform: skew(-30deg, 0deg);
+  transform: skew(-30deg, 0deg);
+}
+#dwc-specimen-nav li.hascontent a:after {
+  content: " ";
+  position: absolute;
+  display: block;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  z-index: -1;
+  background: #0085ba;
+  transform-origin: bottom left;
+  -ms-transform: skew(-30deg, 0deg);
+  -webkit-transform: skew(-30deg, 0deg);
+  transform: skew(-30deg, 0deg);
+}
+
+#darwin-core div[class^="dwc-specimen-content-"] {
+	display:none;
+}
+
+#darwin-core div.dwc-specimen-content-Images {
+	display:block;
+}
+
+#darwin-core.single-dwc-specimen div[class^="dwc-specimen-content-"] {
+	display:none;
+}
+
+#darwin-core.single-dwc-specimen div.dwc-specimen-content-Summary {
+	display:block;
+}
+
+.dwc-image-preview {
+	margin:20px;
+	float:left;
+}
+
+.dwc-image-preview p {
+	text-align:center;
+}
+
+span.dwc-unknown {
+	color:#cccccc;
+}
+
+#darwin-core #dwc-specimen-header .btn-warning {
+	margin-bottom:10px;
+}
+
+#darwin-core #dwc-specimen-header .btn-warning:hover {
+	background-color:#e6b313;
+	border-color:#e6b313;
+}
+
+#darwin-core #dwc-specimen-header .research-grade-label {
+	float:right;
+	color:#ffffff;
+	background-color:#b37021;
+	border-color:#b37021;
+	line-height: 1.42857;
+	font-weight:700;
+	border-radius: 3px;
+	padding:10px 15px;
+	font-size:16px;
+	text-shadow:0 -1px 0 rgba(0,0,0,0.2);
+}
+
+#darwin-core #research-grade-status {
+	float:right;
+}
+
+#dwc-research-grade-specimen, #dwc-curated-specimen, #dwc-downgrade-specimen, .research-grade-label {
+	margin:0 0 10px 10px;
+}
+
+.dwc-help-popup {
+	float:right;
+	width:40px;
+	border-radius:21px;
+	background-color:#eba047;
+	color:#ffffff;
+	padding:9px 15px;
+	font-weight:bold;
+}
+
+.dwc-class-header {
+	clear:both;
+}
+
+.dwc-prev a, .dwc-next a, .dwc-prev a:hover, .dwc-next a:hover {
+	color:#ffffff;
+	background-color:#eba047;
+	border-color:#eba047;
+	line-height: 1.42857;
+	font-weight:700;
+	border-radius: 3px;
+	padding:5px 10px;
+	font-size:16px;
+	text-decoration:none;
+}
+
+.dwc-next {
+	float:right;
+}
+
+#dwc-footer-nav {
+	padding:20px;
+}
+
+.dwc-class-description {
+	margin:20px 0;
+	padding:15px;
+	clear:both;
+	background-color:#fcefe0;
+	border-radius:3px;
+}
+
+.dwc-class-description > ol {
+	list-style-type:none;
+}
+
+.dwc-class-description > ol > li {
+	list-style-type:none;
+	border-left:3px solid #fcefe0;
+	margin:2px;
+}
+
+.dwc-class-description > ol > li:hover {
+	cursor:pointer;
+}
+
+.dwc-class-description > ol > li > a {
+	text-decoration:none;
+	font-weight:600;
+	display:inline-block;
+	width:15px;
+}
+
+.dwc-class-description > ol > li > span {
+	text-decoration:underline;
+	color:#b37021;
+}
+
+.dwc-class-description > ol > li > ol {
+	list-style-type:lower-roman;
+	display:none;
 }

@@ -1,7 +1,9 @@
 <div id="buddypress">
     <div id="homepage" class="container">
+      <?php get_search_form(); ?>
         <div class="row">
             <div class="col-xs-12 col-sm-12 col-md-3 col-lg-2">
+              <!--
                 <ul class="activity-search-dropdown" style="width:100%">
                     <li class="dropdown">
                     <a  id="search-button" class="btn btn-primary" role="button" data-toggle="dropdown" href="#"><span class="fa-stack"><i class="fa fa-search fa-stack-1x fa-inverse"></i></span>Search <span class="caret"></span></a>
@@ -15,17 +17,17 @@
                     </ul>
                     </li>
                 </ul>
+              -->
                 <div class="feature-highlight">
                     <h4>Featured<br />Fossil</h4>
                     <?php
-                        use myFOSSIL\Plugin\Specimen\Fossil;
                         global $post;
                         $selection = get_option( 'atmo_selectors' )["fossil_id"];
 
                         if (is_integer($selection) && $selection > 0) {
                             $args = array(
                                 'p'             => $selection,
-                                'post_type'     => array( 'myfossil_fossil' )
+                                'post_type'     => array( 'dwc_specimen' )
                             );
                         }
                         else {
@@ -33,7 +35,7 @@
                                 'posts_per_page'    => 1,
                                 'orderby'          => 'date',
                                 'order'            => 'DESC',
-                                'post_type'        => array( 'myfossil_fossil' ),
+                                'post_type'        => array( 'dwc_specimen' ),
                                 'post_status'      => 'publish'
                             );
                         }
@@ -41,29 +43,32 @@
                         $the_query = new WP_Query( $args );
 
                         if ( $the_query->have_posts() ) {
-                            $the_query->the_post(); 
-                            $fossil = new Fossil( $post->ID );
+                            $the_query->the_post();
+                            $fossil = new DarwinCoreSpecimen( $post->ID );
                         }
-                        
+
+                        $audubon = new AudubonCoreMedia($fossil->get_image_assets()[0]);
+
                         $fossil_date = date( "F d, Y", strtotime( $post->post_date) );
-                        $string = $fossil->image;
+                        $string = $audubon->get_image_src();
                         $pattern = '/(\.[A-Za-z]+)$/';
                         $replacement = '-150x150$1';
-
-                        /* Restore original Post Data */
-                        wp_reset_postdata();
                     ?>
                     <div style="padding-top:10px;text-align:center;">
-                        <a href="/fossils/<?php echo $fossil->ID; ?>/">
+                        <a href="/dwc-specimen/<?php echo $post->ID; ?>/">
                             <img style="margin:auto;" class="img-responsive" src="<?php echo preg_replace($pattern, $replacement, $string); ?>" />
                         </a>
-                        <p style="margin-top:10px;"><a href="/fossils/<?php echo $fossil->ID; ?>/"><?php echo $fossil->name; ?></a></p>
-                        <p style="color:#FFFFFF;font-size:9pt;">Contributed by<br /><?php echo $fossil->author->display_name; ?><br /><br />
+                        <p style="margin-top:10px;"><a href="/dwc-specimen/<?php echo $post->ID; ?>/"><?php echo "SPECIMEN ".$post->ID; ?></a></p>
+                        <p style="color:#FFFFFF;font-size:9pt;">Contributed by<br /><?php echo bp_core_get_user_displayname( $post->post_author ); ?><br /><br />
                         <?php echo $fossil_date; ?><br /><br />
-                        <a href="<?php echo bp_core_get_userlink( $fossil->author->ID, false, true ); ?>">@<?php echo $fossil->author->user_nicename; ?></a><br /><br />
-                        <a href="/fossils/" id="fossil-create-new">ADD YOURS</a>
+                        <a href="<?php echo bp_core_get_userlink( $post->post_author, false, true ); ?>">@<?php echo bp_core_get_user_displayname( $post->post_author ); ?></a><br /><br />
+                        <a href="/dwc-specimen/" id="fossil-create-new">ADD YOURS</a>
                         </p>
                     </div>
+                    <?php
+                    /* Restore original Post Data */
+                    wp_reset_postdata();
+                    ?>
                 </div>
                 <div id="sidebar-social-logos">
                     <p>
@@ -105,12 +110,12 @@
                                 $the_query = new WP_Query( $args );
 
                                 if ( $the_query->have_posts() ) {
-                                    $the_query->the_post(); 
+                                    $the_query->the_post();
                                     $title = '<a href="'. $post->guid . '" style="font-size:9pt;">' . $post->post_title . '</a>';
                                     $parent = $post->post_parent;
                                     $author = $post->post_author;
                                 }
-                                
+
                                 /* Restore original Post Data */
                                 wp_reset_postdata();
 
@@ -122,10 +127,10 @@
                                 $the_query = new WP_Query( $args );
 
                                 if ( $the_query->have_posts() ) {
-                                    $the_query->the_post(); 
+                                    $the_query->the_post();
                                     $forum =  '<a href="'. $post->guid . '" style="color:#9B9B9B;font-size:9pt;">' . $post->post_title . ' Forum</a>';
                                 }
-                                
+
                                 /* Restore original Post Data */
                                 wp_reset_postdata();
                             ?>
@@ -145,7 +150,7 @@
                         );
                         // The Query
                         $reply_query = new WP_Query( $reply_args );
-                        
+
                         // The Loop
                         if ( $reply_query->have_posts() ) {
                             echo '<ul class="recent-forum-list">';
@@ -176,7 +181,7 @@
                                     </div>
                                     <div class="clear"></div>
                                 </li>
-                            <?php endwhile; 
+                            <?php endwhile;
                             echo '</ul>';
                         } else {
                             // no posts found
@@ -195,24 +200,24 @@
                 <div class="row">
                     <div class="col-sm-12 newest-members-widget">
                         <h4>Newest Members</h4>
-                        <?php if ( bp_has_members( 'per_page=100&type=newest' ) ) : 
+                        <?php if ( bp_has_members( 'per_page=100&type=newest' ) ) :
                             do_action( 'bp_before_directory_members_list' );
                             echo '<div class="newest-members-list">';
-                            while ( bp_members() ) : bp_the_member(); 
+                            while ( bp_members() ) : bp_the_member();
                                 if (current_user_has_avatar(bp_get_member_user_id())) : ?>
                                 <div class="activity-entry" style="background-color:transparent;border:none;">
                                     <div class="newest-members-avatar"><a href="<?php bp_member_permalink(); ?>" title="<?php bp_member_name(); ?>"><?php bp_member_avatar( 'type=full&width=75&height=75' ); ?></a></div>
                                     <div class="newest-members-details"><p><a href="<?php bp_member_permalink(); ?>"><?php bp_member_name(); ?></a></p><p><?php bp_member_profile_data(array('field' => 'Location')); ?></p></div>
                                 </div>
                                 <?php endif; ?>
-                            <?php 
+                            <?php
                             endwhile;
                             echo '</div>'; ?>
-                                
+
                             <?php do_action( 'bp_after_directory_members_list' ); ?>
-                             
+
                             <?php bp_member_hidden_fields(); ?>
-                         
+
                         <?php else: ?>
                         <div id="message" class="info">
                             <p><?php _e( "Sorry, no members were found.", 'buddypress' ); ?></p>

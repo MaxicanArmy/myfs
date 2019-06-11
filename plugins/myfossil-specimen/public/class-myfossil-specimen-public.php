@@ -104,7 +104,7 @@ class myFOSSIL_Specimen_Public
 
         // Bail if it's not even JSON
         // Bail if we don't have a post type defined
-        if ( ! self::isJson( $content ) || ! @property_exists( $json, 'post_type' ) || ! @property_exists( $json, 'changeset' ) ) 
+        if ( ! self::isJson( $content ) || ! @property_exists( $json, 'post_type' ) || ! @property_exists( $json, 'changeset' ) )
             return $content;
 
         $tpl = $this->get_twig();
@@ -150,20 +150,20 @@ class myFOSSIL_Specimen_Public
                             break;
                         case "stratum_group_id":
                             $stratum_group = new Stratum($current->to);
-                            
+
                             return Fossil::bp_format_activity_json(
                                 json_encode(
-                                    array( 
-                                        'post_type' => $stratum_group->wp_post->post_type, 
-                                        'changeset' => array( 
+                                    array(
+                                        'post_type' => $stratum_group->wp_post->post_type,
+                                        'changeset' => array(
                                             array(
-                                                'key' => 'name', 
-                                                'from' => null, 
+                                                'key' => 'name',
+                                                'from' => null,
                                                 'to' => $stratum_group->wp_post->post_title
                                             ),
                                             array(
-                                                'key' => 'level', 
-                                                'from' => 'group', 
+                                                'key' => 'level',
+                                                'from' => 'group',
                                                 'to' => 'group'
                                             )
                                         )
@@ -171,20 +171,20 @@ class myFOSSIL_Specimen_Public
                             break;
                         case "stratum_formation_id":
                             $stratum_formation = new Stratum($current->to);
-                            
+
                             return Fossil::bp_format_activity_json(
                                 json_encode(
-                                    array( 
-                                        'post_type' => $stratum_formation->wp_post->post_type, 
-                                        'changeset' => array( 
+                                    array(
+                                        'post_type' => $stratum_formation->wp_post->post_type,
+                                        'changeset' => array(
                                             array(
-                                                'key' => 'name', 
-                                                'from' => null, 
+                                                'key' => 'name',
+                                                'from' => null,
                                                 'to' => $stratum_formation->wp_post->post_title
                                             ),
                                             array(
-                                                'key' => 'level', 
-                                                'from' => 'formation', 
+                                                'key' => 'level',
+                                                'from' => 'formation',
                                                 'to' => 'formation'
                                             )
                                         )
@@ -192,20 +192,20 @@ class myFOSSIL_Specimen_Public
                             break;
                         case "stratum_member_id":
                             $stratum_member = new Stratum($current->to);
-                            
+
                             return Fossil::bp_format_activity_json(
                                 json_encode(
-                                    array( 
-                                        'post_type' => $stratum_member->wp_post->post_type, 
-                                        'changeset' => array( 
+                                    array(
+                                        'post_type' => $stratum_member->wp_post->post_type,
+                                        'changeset' => array(
                                             array(
-                                                'key' => 'name', 
-                                                'from' => null, 
+                                                'key' => 'name',
+                                                'from' => null,
                                                 'to' => $stratum_member->wp_post->post_title
                                             ),
                                             array(
-                                                'key' => 'level', 
-                                                'from' => 'member', 
+                                                'key' => 'level',
+                                                'from' => 'member',
                                                 'to' => 'member'
                                             )
                                         )
@@ -219,14 +219,14 @@ class myFOSSIL_Specimen_Public
                             break;
                     }
                 }
-            } 
-            else*/ 
+            }
+            else*/
 
             if (count ( $changes ) == 0) {
                 return "A new fossil has been added. Thank you for contributing!";
                 break;
             }
-            
+
             return "";
             break;
         default:
@@ -239,7 +239,7 @@ class myFOSSIL_Specimen_Public
         json_decode($string);
         return (json_last_error() == JSON_ERROR_NONE);
     }
-
+/*
     public function bp_add_member_fossil_nav_items()
     {
         global $bp;
@@ -257,7 +257,7 @@ class myFOSSIL_Specimen_Public
             )
         );
     }
-
+*/
     public static function buddypress_add_activity( $type, $item_id, $action, $content, $secondary_item_id=0 )
     {
         $args = array(
@@ -373,7 +373,7 @@ class myFOSSIL_Specimen_Public
         case 'myfossil_save_taxon':
             $fossil = new Fossil( $_POST['post_id'] );
 
-            if ( $fossil->taxa_id ) 
+            if ( $fossil->taxa_id )
                 $taxa = new FossilTaxa( $fossil->taxa_id );
             else
                 $taxa = new FossilTaxa;
@@ -395,7 +395,7 @@ class myFOSSIL_Specimen_Public
 
         case 'myfossil_save_lithostratigraphy':
             $fossil = new Fossil( $_POST['post_id'] );
-            
+
             foreach ( Stratum::get_ranks() as $rank ) {
                 if ( ! array_key_exists( $rank, $_POST['strata'] ) )
                     continue;
@@ -529,9 +529,9 @@ class myFOSSIL_Specimen_Public
 
 			$sender_id = \bp_loggedin_user_id();
 			$author_id = $fossil->wp_post->post_author;
-			//do_action( 'myfossil_fossil_activity_posted', $activity_id ); 
-			do_action( 'myfossil_fossil_activity_posted', $post_id, $sender_id, $comment, $author_id ); 
-			
+			//do_action( 'myfossil_fossil_activity_posted', $activity_id );
+			do_action( 'myfossil_fossil_activity_posted', $post_id, $sender_id, $comment, $author_id );
+
             echo $activity_id;
 
             die;

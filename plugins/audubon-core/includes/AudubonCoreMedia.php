@@ -15,13 +15,13 @@ class AudubonCoreMedia {
         $this->id = $post_id;
 
         $meta_values = get_post_meta($post_id);
-        
+
         global $wpdb;
-        
+
         $classes_table_name = $wpdb->prefix . 'audubon_core_classes';
         $terms_table_name = $wpdb->prefix . 'audubon_core_terms';
         $vocabulary_table_name = $wpdb->prefix . 'audubon_core_vocabulary';
-        $enabled_terms = $wpdb->get_results( "SELECT " . 
+        $enabled_terms = $wpdb->get_results( "SELECT " .
             $classes_table_name . ".className, " .
             $classes_table_name . ".displayName AS 'classDisplayName', " .
             $classes_table_name . ".layout, " .
@@ -45,6 +45,19 @@ class AudubonCoreMedia {
         }
 
         $this->meta_keys['changelog'] = json_decode($meta_values['changelog'][0], true);
+    }
+
+    public function get_image_src() {
+      $args = array(
+        'post_parent' => $this->id,
+        'post_type' => 'attachment'
+      );
+      $attachments = get_children($args);
+      $media = array_shift( $attachments );
+      if ( !is_null( $media ) ) {
+        $rval = wp_get_attachment_image_src( $media->ID, '2000')[0];
+      }
+      return $rval;
     }
 
     public function save( $post_values ) {
@@ -71,7 +84,7 @@ class AudubonCoreMedia {
             ksort($this->layout[$count]);
             foreach ($this->layout[$count] as $current) {
                 $meta_key = $this->meta_keys[$current];
-                
+
                 echo '
                     <div>
                         <h3 class="ac-meta-heading">'.apply_filters('audubon-core-add-'.$access.'-'.$current.'-helper', '').$meta_key['displayName'].'</h3>

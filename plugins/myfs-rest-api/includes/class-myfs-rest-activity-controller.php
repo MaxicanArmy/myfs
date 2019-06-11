@@ -238,6 +238,10 @@ class MYFS_REST_Activity_Controller extends WP_REST_Controller {
 		if ( $activities_template->activities[0]->type != "dwc_specimen_created" )
 			return new WP_Error( 'user_not_authorized', __( 'You don\'t have permission to do this.' ), array( 'status' => 400 ) );
 
+		if (get_post_meta( $activities_template->activities[0]->secondary_item_id, 'grade', true ) == 'research')
+			return new WP_Error( 'editing_not_allowed', __( 'Research Grade specimens can only be edited by administrators.' ), array( 'status' => 400 ) );
+
+
 		return true;
 	}
 
@@ -499,7 +503,7 @@ class MYFS_REST_Activity_Controller extends WP_REST_Controller {
 	 */
 	public function save_app_image( $user_id, $key ) {
 		$attach_id = false;
-	
+
 		if ($_FILES[$key]['error'] === UPLOAD_ERR_OK) {
 			// These files need to be included as dependencies when on the front end.
 			require_once( ABSPATH . 'wp-admin/includes/image.php' );
@@ -507,7 +511,7 @@ class MYFS_REST_Activity_Controller extends WP_REST_Controller {
 			require_once( ABSPATH . 'wp-admin/includes/media.php' );
 			$attach_id = media_handle_upload( $key, 0, array( "post_author" => $user_id ) );
 		}
-		
+
 		return $attach_id;
 	}
 
@@ -632,16 +636,18 @@ class MYFS_REST_Activity_Controller extends WP_REST_Controller {
 				break;
 
 			case "app_image_update" :
-			
+
 				/*
 				 * this only works for single image uploads, if they change to multiple uploads in the future then we will need to put all of the $success IDs in the shortcode
 				 */
-				foreach ($_FILES as $key => $value) { 
+				foreach ($_FILES as $key => $value) {
 					$success = self::save_app_image( $user_id, $key ); //returns ID of the new wp_attachment, can make this return an object if I need more data
 
 					if ($success) {
 						$args['action'] = "<a href='{$user_link}'>{$username}</a> posted an image in the group <a href='{$group_link}'>{$group->name}</a> from the myFOSSIL app";
 						if ( strpos( $key, 'image' ) === 0 ) {	//this supports the older version of the app that had problems with cached images of deleted items overriding new uploads
+							$args['content'] = $_POST['content1'] . "\n[myfs-app-image id=".$success."]";
+						} else if ( !empty($_POST['content1'] ) ) {
 							$args['content'] = $_POST['content1'] . "\n[myfs-app-image id=".$success."]";
 						} else {
 							$args['content'] = $_POST["content-".$key] . "\n[myfs-app-image id=".$success."]";

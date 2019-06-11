@@ -19,7 +19,7 @@ function myfs_core_recent_specimen_count( $days ) {
 	$args = array(
         'orderby'          => 'date',
         'order'            => 'DESC',
-        'post_type'        => array( 'myfossil_fossil' ),
+        'post_type'        => array( 'dwc_specimen' ),
         'date_query'       => array(
                                 array(
                                     'after' => $days.' days ago') ),
@@ -58,7 +58,7 @@ function myfs_core_recent_forum_post_count( $days ) {
     );
     // The Query
     $the_query = new WP_Query( $args );
-    
+
     // The Loop
     if ( $the_query->have_posts() ) {
         $new_forums = $the_query->found_posts;
@@ -85,7 +85,7 @@ function myfs_core_recent_member_count( $days ) {
     );
     // The Query
     $user_query = new WP_User_Query( $args );
-    
+
     // The Loop
     if ( ! empty( $user_query->results ) ) {
         $new_members = $user_query->total_users;
@@ -187,7 +187,7 @@ function myfs_send_push_notifications( $args = array() ) {
 			}
 
 			curl_close($ch);
-		}			
+		}
 	}
 	$update_badge = update_user_meta( $args['recipient'], 'badge_num', $badge_num );
 

@@ -72,7 +72,7 @@ echo do_shortcode("[sg_popup id=2]"); ?>
 					);
 
 					$paginate_links = paginate_links( $args );
-					
+
 					if ( $paginate_links ) {
 				        echo '<div class="pagination">';
 				        echo $paginate_links;

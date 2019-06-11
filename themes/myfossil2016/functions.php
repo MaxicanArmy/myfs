@@ -112,49 +112,48 @@ add_action('widgets_init', 'myfossil_widgets_init');
 /**
  * Enqueue scripts and styles.
  */
-function myfossil_scripts()
-{
-    /* Styles */
-	wp_enqueue_style( 'dashicons' );
-    //wp_enqueue_style('boostrap-css', "//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css");
-    wp_enqueue_style('bootstrap-theme', get_template_directory_uri() . '/css/bootstrap-theme.min.css');
-    wp_enqueue_style('bootstrap-min', get_template_directory_uri() . '/css/bootstrap.min.css');
-    wp_enqueue_style('myfossil-style', get_template_directory_uri() . '/style.css', array(), '2.3.0');
-    wp_enqueue_style('font-awesome', "//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css");
-    //wp_enqueue_style('jquery-ui-theme', get_template_directory_uri() . '/static/css/jquery-ui.theme.min.css');
-    //wp_enqueue_style('jquery-ui-structure', get_template_directory_uri() . '/static/css/jquery-ui.structure.min.css');
-    wp_enqueue_style('ionicons', '//code.ionicframework.com/ionicons/1.5.2/css/ionicons.min.css' );
-    //wp_enqueue_style('mentions', get_template_directory_uri() . '/static/css/bp-activity-mentions.min.css');       
-            
+function myfossil_scripts() {
+  /* Styles */
+  wp_enqueue_style( 'dashicons' );
+  //wp_enqueue_style('boostrap-css', "//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css");
+  wp_enqueue_style('bootstrap-theme', get_template_directory_uri() . '/css/bootstrap-theme.min.css');
+  wp_enqueue_style('bootstrap-min', get_template_directory_uri() . '/css/bootstrap.min.css');
+  wp_enqueue_style('myfossil-style', get_template_directory_uri() . '/style.css', array(), '2.3.123');
+  wp_enqueue_style('font-awesome', "//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css");
+  //wp_enqueue_style('jquery-ui-theme', get_template_directory_uri() . '/static/css/jquery-ui.theme.min.css');
+  //wp_enqueue_style('jquery-ui-structure', get_template_directory_uri() . '/static/css/jquery-ui.structure.min.css');
+  wp_enqueue_style('ionicons', '//code.ionicframework.com/ionicons/1.5.2/css/ionicons.min.css' );
+  //wp_enqueue_style('mentions', get_template_directory_uri() . '/static/css/bp-activity-mentions.min.css');
 
-    /* Scripts */
-    //wp_enqueue_script( 'bootstrap', get_template_directory_uri() . '/static/js/bootstrap.min.js' );
-    wp_enqueue_script( 'myfossil', get_template_directory_uri() . '/static/js/myfossil.min.js' );
-    //wp_enqueue_script( 'comment-reply', get_template_directory_uri() . '/static/js/comment-reply.min.js' );
-    //wp_enqueue_script( 'html5', get_template_directory_uri() . '/static/js/html5.min.js' );
-    //wp_enqueue_script( 'respond', get_template_directory_uri() . '/static/js/respond.min.js' );
-    //wp_enqueue_script( 'jquery-ui', get_template_directory_uri() . '/static/js/jquery-ui.min.js' );
-    wp_enqueue_script( 'jquery-popup-overlay', get_template_directory_uri() . '/js/jquery.popupoverlay.min.js' );
-    wp_enqueue_script( 'bootstrap-js', "//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js");
 
-    if ( is_singular() && comments_open() && get_option('thread_comments') ) {
-        wp_enqueue_script('comment-reply');
-    }
-    
-    //wp_enqueue_script ( 'buddypress', get_template_directory_uri() . '/static/js/jquery.atwho.min.js' );    
-    //wp_enqueue_script ( 'bpcar', get_template_directory_uri() . '/static/js/jquery.caret.min.js' );
-    //wp_enqueue_script ( 'bpmen', get_template_directory_uri() . '/static/js/mentions.min.js' );
-    wp_enqueue_script ( 'atmo-custom', get_template_directory_uri() . '/js/custom.js', array(), '2.2.4' );
+  /* Scripts */
+  //wp_enqueue_script( 'bootstrap', get_template_directory_uri() . '/static/js/bootstrap.min.js' );
+  wp_enqueue_script( 'myfossil', get_template_directory_uri() . '/static/js/myfossil.min.js' );
+  //wp_enqueue_script( 'comment-reply', get_template_directory_uri() . '/static/js/comment-reply.min.js' );
+  //wp_enqueue_script( 'html5', get_template_directory_uri() . '/static/js/html5.min.js' );
+  //wp_enqueue_script( 'respond', get_template_directory_uri() . '/static/js/respond.min.js' );
+  //wp_enqueue_script( 'jquery-ui', get_template_directory_uri() . '/static/js/jquery-ui.min.js' );
+  wp_enqueue_script( 'jquery-popup-overlay', get_template_directory_uri() . '/js/jquery.popupoverlay.min.js' );
+  wp_enqueue_script( 'bootstrap-js', "//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js");
 
-    global $is_IE;
-    if (!$is_IE) {
-    	wp_enqueue_script ( 'wysiwyg-post-form', get_template_directory_uri() . '/js/wysiwyg-post-form.js', array(), '1.0.0' );
-    }
+  if ( is_singular() && comments_open() && get_option('thread_comments') ) {
+    wp_enqueue_script('comment-reply');
+  }
+
+  //wp_enqueue_script ( 'buddypress', get_template_directory_uri() . '/static/js/jquery.atwho.min.js' );
+  //wp_enqueue_script ( 'bpcar', get_template_directory_uri() . '/static/js/jquery.caret.min.js' );
+  //wp_enqueue_script ( 'bpmen', get_template_directory_uri() . '/static/js/mentions.min.js' );
+  wp_enqueue_script ( 'atmo-custom', get_template_directory_uri() . '/js/custom.js', array(), '2.2.4' );
+
+  global $is_IE;
+  if (!$is_IE) {
+  	wp_enqueue_script ( 'wysiwyg-post-form', get_template_directory_uri() . '/js/wysiwyg-post-form.js', array(), '1.0.0' );
+  }
 }
 add_action('wp_enqueue_scripts', 'myfossil_scripts');
 
-/* 
- * Required so buddypress doesn't override our stylesheet 
+/*
+ * Required so buddypress doesn't override our stylesheet
  */
 function my_dequeue_bp_styles() {
 	wp_dequeue_style( 'bp-legacy-css' );
@@ -208,7 +207,7 @@ require get_template_directory() . '/includes/extras.php';
 
 
 /*
- * This filter is required so that buddypress entries are not truncated. The fossil histories are buddypress posts in json format and if they are truncated then they are not recognizable json 
+ * This filter is required so that buddypress entries are not truncated. The fossil histories are buddypress posts in json format and if they are truncated then they are not recognizable json
 */
 function filter_bp_activity_excerpt_length() {
     return 1e+10;
@@ -229,9 +228,9 @@ function parse_meta( $meta ) {
 // change Notification labels
 function mf_gettext_with_context( $translated, $text, $context, $domain ) {
 
-	if ( 'buddypress' !== $domain )  
-        return $translated; 
-        
+	if ( 'buddypress' !== $domain )
+        return $translated;
+
 	switch ( $text ) {
 
         case 'Read':
@@ -240,8 +239,8 @@ function mf_gettext_with_context( $translated, $text, $context, $domain ) {
 			elseif( $context == 'Notification screen action' )
 				return 'Mark as Viewed';
 			else
-                return 'Read';		
-	
+                return 'Read';
+
         case 'Unread':
             if( $context == 'Notification screen nav' )
                 return 'Not Viewed';
@@ -249,7 +248,7 @@ function mf_gettext_with_context( $translated, $text, $context, $domain ) {
 				return 'Mark as Not Viewed';
 			else
 				return 'Unread';
-			
+
         default:
             return $translated;
     }
@@ -260,21 +259,21 @@ add_filter( 'gettext_with_context', 'mf_gettext_with_context', 20, 4 );
 
 // change Notification feedback messages
 function mf_gettext( $translated_text, $text, $domain ) {
-	
-	if ( 'buddypress' !== $domain )  
-        return $translated_text; 
-        
+
+	if ( 'buddypress' !== $domain )
+        return $translated_text;
+
 	switch ( $text ) {
-	
+
 		case 'Notification successfully marked read.':
 			return 'Notification successfully marked as Viewed.';
-	
+
 		case 'Notification successfully marked unread.':
-			return 'Notification successfully marked as Not Viewed.';		
-		
+			return 'Notification successfully marked as Not Viewed.';
+
         default:
-            return $translated_text;	
-	
+            return $translated_text;
+
 	}
 }
 add_filter( 'gettext', 'mf_gettext', 21, 3 );
@@ -283,17 +282,17 @@ add_filter( 'gettext', 'mf_gettext', 21, 3 );
 function mf_remove_xprofile_links() {
     remove_filter( 'bp_get_the_profile_field_value', 'xprofile_filter_link_profile_data', 9, 2 );
 }
-add_action('bp_setup_globals', 'mf_remove_xprofile_links'); 
+add_action('bp_setup_globals', 'mf_remove_xprofile_links');
 
 
 
 
 function mf_joined_group_action( $action, $activity ) {
-	
+
 	$action = str_replace ( 'joined the group', 'followed the group', $action );
 
 	return $action;
-	
+
 }
 add_filter( 'bp_groups_format_activity_action_joined_group', 'mf_joined_group_action', 25, 2 );
 
@@ -305,43 +304,43 @@ add_action( 'bp_setup_nav', 'mf_remove_activity_mentions_nav', 25 );
 
 // remove 'mentions' from link since 'personal' & 'mentions' are now combined
 function mf_adjust_notification_description( $description ) {
-	
+
 	$description = str_replace('mentions/', '', $description);
-	
+
 	return $description;
-	
+
 }
 add_filter('bp_get_the_notification_description', 'mf_adjust_notification_description', 25 );
 
 
 //change the message re @ mention emails
 function mf_change_email_message( $message, $poster_name, $content, $message_link, $settings_link ) {
-	
+
 	$message = str_ireplace('To view and respond to the message, log in and visit:', "Please DO NOT RESPOND TO THIS EMAIL; you must log in to the website to respond.  See link below.\n", $message);
-	
-	return $message; 
+
+	return $message;
 }
 add_filter( 'bp_activity_at_message_notification_message', 'mf_change_email_message', 25, 5);
 
 // find plain urls in activity content and auto link to new window
 function mf_autolink_activity_content_body( $str ) {
-	
+
 	$str = links_add_target( make_clickable( $str ) );
-	
+
 	return $str;
-	
-	
+
+
 }
 add_filter( 'bp_get_activity_content_body', 'mf_autolink_activity_content_body' );
 
 
 // open url in new window
 function mf_activity_comment_new_window( $content ) {
-	
+
 	$content = links_add_target( $content );
-	
-	return $content; 
-	
+
+	return $content;
+
 }
 add_filter( 'bp_activity_comment_content', 'mf_activity_comment_new_window' );
 */
@@ -425,37 +424,37 @@ function mf_fossil_activity_posted( $post_id, $sender_id, $comment, $fossil_auth
 	global $wpdb;
 
 	if (( ! get_user_meta( $fossil_author_id, 'notification_fossils', true ) || 'yes' == get_user_meta( $fossil_author_id, 'notification_fossils', true )) && $sender_id != $fossil_author_id) {
-	
-		$sender_name = $wpdb->get_var( $wpdb->prepare( 
-			"SELECT display_name FROM $wpdb->users WHERE ID = %d", 
+
+		$sender_name = $wpdb->get_var( $wpdb->prepare(
+			"SELECT display_name FROM $wpdb->users WHERE ID = %d",
 			$sender_id
 		) );
-		
+
 		$fossil_author_mail = get_the_author_meta( 'user_email', $fossil_author_id );
 		$fossil_author_login_name = get_the_author_meta( 'user_login', $fossil_author_id );
-		
+
 		$to =  $fossil_author_mail;
-		
+
 		$subject = '[myFOSSIL] Comment on Fossil ' . $post_id;
-		
+
 		$message = $sender_name . ' just commented on your fossil!  Log in to view the comment and respond.';
-		
+
 		$message .= '<br/><br/>Comment: ' . stripslashes( $comment );
-		
+
 		$message .= '<br/><br/>Please DO NOT RESPOND TO THIS EMAIL; you must log in to the website to respond.  See link below.<br/>';
-		
+
 		$message .= '<a href="' . site_url() . '/fossils/' . $post_id . '">' . site_url() . '/fossils/' . $post_id . '</a>';
-	
+
 		$message .= '<br/><br/>---------------------<br/>';
-		
+
 		$message .= 'To disable these notifications please log in and go to: ';
-		
+
 		$message .= '<br/><a href="' . site_url() . '/members/' . $fossil_author_login_name . '/settings/notifications/">' . site_url() . '/members/' .  $fossil_author_login_name . '/settings/notifications/</a>';
-	
-	
+
+
 		$headers = array();
 		$headers[] = "Content-type: text/html";
-		
+
 		wp_mail( $to, $subject, $message, $headers  );
 
 		//generate the buddypress notification
@@ -469,7 +468,7 @@ function mf_fossil_activity_posted( $post_id, $sender_id, $comment, $fossil_auth
 	        'is_new'            => 1,
 	    );
 	    bp_notifications_add_notification( $output );
-	
+
 	}
 }
 add_action( 'myfossil_fossil_activity_posted', 'mf_fossil_activity_posted', 10, 4 );
@@ -477,49 +476,49 @@ add_action( 'myfossil_fossil_activity_posted', 'mf_fossil_activity_posted', 10, 
 // send fossil owner an email when a COMMENT is made on an activity entry on one of their fossils
 function my_fossil_activity_comment_posted( $comment_id, $r, $activity ) {
 	global $wpdb;
-	
+
 	$comment_row = $wpdb->get_row( "SELECT * FROM {$wpdb->prefix}bp_activity WHERE id = $comment_id", ARRAY_A );
-	
+
 	$item_id = $comment_row['item_id'];
-	
+
 	$comment_parent_row = $wpdb->get_row( "SELECT * FROM {$wpdb->prefix}bp_activity WHERE id = $item_id", ARRAY_A );
-	
-	
+
+
 	if ( $comment_parent_row['type'] == 'myfossil_fossil_comment' ) {
-	
+
 		if ( ! get_user_meta( $comment_parent_row['secondary_item_id'], 'notification_fossils', true ) || 'yes' == get_user_meta( $comment_parent_row['secondary_item_id'], 'notification_fossils', true ) ) {
-	
+
 			$fossil_author_mail = get_the_author_meta( 'user_email', $comment_parent_row['secondary_item_id'] );
-			$fossil_author_login_name = get_the_author_meta( 'user_login', $comment_parent_row['secondary_item_id']  );	
-		
+			$fossil_author_login_name = get_the_author_meta( 'user_login', $comment_parent_row['secondary_item_id']  );
+
 			$to =  $fossil_author_mail;
-			
-			$subject = '[myFOSSIL] Comment on Fossil ' .  $comment_parent_row['item_id'];	
-		
-			$sender_name = $wpdb->get_var( $wpdb->prepare( 
-				"SELECT display_name FROM $wpdb->users WHERE ID = %d", 
+
+			$subject = '[myFOSSIL] Comment on Fossil ' .  $comment_parent_row['item_id'];
+
+			$sender_name = $wpdb->get_var( $wpdb->prepare(
+				"SELECT display_name FROM $wpdb->users WHERE ID = %d",
 				$comment_row['user_id']
 			) );
-		
-		
+
+
 			$message = $sender_name . ' just replied to a comment on your fossil!  Log in to view the comment and respond.';
-			
+
 			$message .= '<br/><br/>Comment: ' . stripslashes( $comment_row['content'] );
-			
+
 			$message .= '<br/><br/>Please DO NOT RESPOND TO THIS EMAIL; you must log in to the website to respond.  See link below.<br/>';
-			
+
 			$message .= '<a href="' . site_url() . '/fossils/' . $comment_parent_row['item_id'] . '">' . site_url() . '/fossils/' . $comment_parent_row['item_id'] . '</a>';
-		
+
 			$message .= '<br/><br/>---------------------<br/>';
-			
+
 			$message .= 'To disable these notifications please log in and go to: ';
-			
+
 			$message .= '<br/><a href="' . site_url() . '/members/' . $fossil_author_login_name . '/settings/notifications/">' . site_url() . '/members/' .  $fossil_author_login_name . '/settings/notifications/</a>';
-	
-			
+
+
 			$headers = array();
 			$headers[] = "Content-type: text/html";
-			
+
 			wp_mail( $to, $subject, $message, $headers  );
 
 			//generate the buddypress notification if the comment parent is not the fossil owner
@@ -547,7 +546,7 @@ function mf_fossil_notification_settings() {
 	?>
 
 		<table class="notification-settings" id="groups-notification-settings">
-	
+
 			<thead>
 			<tr>
 				<th class="icon"></th>
@@ -556,7 +555,7 @@ function mf_fossil_notification_settings() {
 				<th class="no"><?php _e( 'No', 'buddypress' )?></th>
 			</tr>
 			</thead>
-	
+
 			<tbody>
 			<tr id="fossils-notification-settings-comments">
 				<td></td>
@@ -564,9 +563,9 @@ function mf_fossil_notification_settings() {
 				<td class="yes"><input type="radio" name="notifications[notification_fossils]" value="yes" <?php if ( !get_user_meta( $current_user->ID, 'notification_fossils', true ) || 'yes' == get_user_meta( $current_user->ID, 'notification_fossils', true ) ) { ?>checked="checked" <?php } ?>/></td>
 				<td class="no"><input type="radio" name="notifications[notification_fossils]" value="no" <?php if ( get_user_meta( $current_user->ID, 'notification_fossils', true ) == 'no' ) { ?>checked="checked" <?php } ?>/></td>
 			</tr>
-	
+
 			<?php do_action( 'mf_fossil_notification_settingss' ); ?>
-	
+
 			</tbody>
 		</table>
 <?php
@@ -580,11 +579,11 @@ add_action( 'bp_notification_settings', 'mf_fossil_notification_settings', 25 );
 
 function mf_ufl_register( $registration_url ) {
 	//$registration_url = sprintf( '<a href="%s">%s</a>', esc_url( wp_registration_url() ), __( 'Register' ) );
-	
+
 	$registration_url = '<a href="https://www.myfossil.org/register/" target="_blank">Create New Account!</a><br/>&nbsp;<br/>';
-	
+
 	return $registration_url;
-	
+
 }
 add_filter( 'register', 'mf_ufl_register', 15, 1 );
 //apply_filters( 'register', $registration_url )  in wp-login.php
@@ -594,15 +593,15 @@ add_filter( 'register', 'mf_ufl_register', 15, 1 );
  * called in \myfossil-theme\buddypress\members\members-loop.php
  */
 function mf_member_fossil_count( $user_id ) {
-	global $wpdb; 
-	
-	$fossil_count = $wpdb->get_var( "SELECT COUNT(ID) FROM $wpdb->posts WHERE post_type = 'myfossil_fossil' AND post_author = $user_id AND post_status = 'publish'" );	
-	
+	global $wpdb;
+
+	$fossil_count = $wpdb->get_var( "SELECT COUNT(ID) FROM $wpdb->posts WHERE post_type = 'myfossil_fossil' AND post_author = $user_id AND post_status = 'publish'" );
+
 	if( $fossil_count == NULL )
 		$fossil_count = 0;
-	
-	return $fossil_count; 
-	
+
+	return $fossil_count;
+
 }
 
 //enable @mentions on any page
@@ -631,7 +630,7 @@ add_filter( 'bbp_after_get_the_content_parse_args', 'bbp_enable_visual_editor' )
 function myformatTinyMCE($in) {
     $in['statusbar'] = false;
 
-    return $in; 
+    return $in;
 }
 add_filter('tiny_mce_before_init', 'myformatTinyMCE' );
 
@@ -644,19 +643,19 @@ function bpfr_remove_menu_tiny_editor($settings) {
 
 add_filter('tiny_mce_before_init', 'vipx_filter_tiny_mce_before_init');
 function vipx_filter_tiny_mce_before_init( $options ) {
- 
+
     if ( ! isset( $options['extended_valid_elements'] ) ) {
         $options['extended_valid_elements'] = '';
     } else {
         $options['extended_valid_elements'] .= ',';
     }
- 
+
     if ( ! isset( $options['custom_elements'] ) ) {
         $options['custom_elements'] = '';
     } else {
         $options['custom_elements'] .= ',';
     }
- 
+
     $options['extended_valid_elements'] .= 'font[face|size|color|style]';
     $options['custom_elements']         .= 'font[face|size|color|style]';
     return $options;
@@ -739,7 +738,7 @@ function return_nav_echo() {
 /**
  * I don't know how the "activity" page is even being created on the groups page but this function removes it
  */
-function bpex_remove_group_tabs() {  
+function bpex_remove_group_tabs() {
 
 /**
  * @since 2.6.0 Introduced the $component parameter.
@@ -747,7 +746,7 @@ function bpex_remove_group_tabs() {
  * @param string $slug      The slug of the primary navigation item.
  * @param string $component The component the navigation is attached to. Defaults to 'members'.
  * @return bool Returns false on failure, True on success.
- */ 
+ */
 
 	if ( ! bp_is_group() ) {
 		return;
@@ -765,10 +764,10 @@ function bpex_remove_group_tabs() {
 }
 add_action( 'bp_actions', 'bpex_remove_group_tabs' );
 
-// Rename Buddydrive tab on members page 
+// Rename Buddydrive tab on members page
 function rt_change_profile_tab_order() {
 	global $bp;
-	
+
 	$bp->bp_nav['buddydrive']['name'] = 'My Files';
 }
 add_action( 'bp_setup_nav', 'rt_change_profile_tab_order', 999 );
@@ -782,7 +781,7 @@ function myplugin_registration_save( $user_id ) {
     update_user_meta($user_id, 'prefix_first_login', '1');
 
 }
-/* No longer necessary as users go through the normal register -> activate -> login flow now, rather than Kent  creating their account 
+/* No longer necessary as users go through the normal register -> activate -> login flow now, rather than Kent  creating their account
 // hook when user logs in
 add_action('wp_login', 'your_function', 10, 2);
 
@@ -864,7 +863,7 @@ function create_states_dropdown ($f)
     return $f;
 }
 
-// this function extends the password reset link expiration time to 30 times the default 
+// this function extends the password reset link expiration time to 30 times the default
 function filter_password_reset_expiration($day_in_seconds){
 	$week = $day_in_seconds * 7;
 	return $week;
@@ -896,27 +895,27 @@ function gadwp_addcode($gadwp) {
 add_action( 'gadwp_analytics_commands',  'gadwp_addcode', 10, 1 );
 
 /* Remove from profile any registration fields that users can't edit later */
-function bpfr_hide_profile_edit( $retval ) {	
+function bpfr_hide_profile_edit( $retval ) {
 	// remove field from edit tab
 	if(  bp_is_profile_edit() ) {
 		$retval['exclude_fields'] = '13,14,15,16,24,25,28,36,44,45,55,56,59,62,65,75,81,91,92,98,111,203'; // ID's separated by comma
-	}		
-	
+	}
+
 	// hide the field on profile view tab
 	 else if ( bp_is_member() ) {
 		$retval['exclude_fields'] = '13,14,15,16,24,25,28,36,44,45,55,56,59,62,65,75,81,91,92,98,111,203'; // ID's separated by comma
-	}	
-	// allow field on registration page     
+	}
+	// allow field on registration page
 	if ( bp_is_register_page() ) {
 		$retval['exclude_fields'] = '12,3,4,2,5,6,7,8,9,10,11'; // ID's separated by comma
 	}
 	/*
-	if ( $data = bp_get_profile_field_data( 'field=3' ) ) : 
+	if ( $data = bp_get_profile_field_data( 'field=3' ) ) :
 		$retval['exclude_fields'] = '13,14,15,16,24,25,28,36,44,45,55,56,59,62,65,75,81,91,92,98,111'; // ID's separated by comma
 	endif;
-	*/	
-	
-	return $retval;	
+	*/
+
+	return $retval;
 }
 add_filter( 'bp_after_has_profile_parse_args', 'bpfr_hide_profile_edit' );
 
@@ -930,7 +929,7 @@ function bp_auto_generate_username(){
 
     while ( username_exists( $username ) ) {
     	$username = $base.'-'.$count++;
-    } 
+    }
 
     $_POST['signup_username'] = $username;
     $_POST['field_1'] = $my_post['field_13'].' '.$my_post['field_14'];
@@ -943,9 +942,9 @@ add_action( 'bp_signup_pre_validate', 'bp_auto_generate_username' );
 function bp_validate_conditional_registration(){
 
     global $bp;
-   	unset($bp->signup->errors['signup_username']); 
+   	unset($bp->signup->errors['signup_username']);
 
-    if ( !isset($_POST['field_343'] ) ) { 
+    if ( !isset($_POST['field_343'] ) ) {
     	return;
     } else {
     	if ( $_POST['field_343'] === 'Yes' ) {
@@ -953,10 +952,10 @@ function bp_validate_conditional_registration(){
     		unset($bp->signup->errors['field_349']);
     		unset($bp->signup->errors['field_350']);
     		unset($bp->signup->errors['field_351']);
-    	} 
+    	}
     	else if ( $_POST['field_343'] === 'No' ) {
     		unset($bp->signup->errors['field_25']);
-    		
+
     		if ( !isset( $_POST['field_346'] ) ) {
     			return;
     		} else {
@@ -988,7 +987,7 @@ add_action( 'bp_signup_validate', 'bp_validate_conditional_registration' );
 function current_user_has_avatar( $user_id) {
 	global $bp;
 
-	if (strpos(bp_core_fetch_avatar( array( 'item_id' => $user_id, 'no_grav' => true, 'html'=>false) ), 'mystery-man') === false)	
+	if (strpos(bp_core_fetch_avatar( array( 'item_id' => $user_id, 'no_grav' => true, 'html'=>false) ), 'mystery-man') === false)
 		return true;
 
 	return false;
@@ -1013,13 +1012,13 @@ function myfs_bpro_bbpress_gate_compose( $allowed ) {
 	return $allowed;
 }
 add_filter( 'bprwg_bbpress_allowed_areas', 'myfs_bpro_bbpress_gate_compose' );
-*/	
+*/
 function bpfr_hide_tabs() {
 	global $bp;
 	if ( bp_is_user() && get_user_meta(get_current_user_id(), '_bprwg_is_moderated', true) == 'true' ) {
 		bp_core_remove_nav_item( 'files' );
 		bp_core_remove_subnav_item( 'messages', 'compose' );
-	}	
+	}
 }
 add_action( 'bp_setup_nav', 'bpfr_hide_tabs', 15 );
 
@@ -1070,12 +1069,12 @@ function ntwb_bbpress_custom_kses_allowed_tags() {
 		'blockquote' => array(
 			'cite'     => true,
 		),
-		
+
 		// Div
 		'div' => array(
 			'class'     => true,
 		),
-		
+
 		// Span
 		'span'             => array(
 			'class'     => true,
@@ -1083,7 +1082,7 @@ function ntwb_bbpress_custom_kses_allowed_tags() {
 			'contenteditable' => true,
 			'data-atwho-at-query' => true
 		),
-		
+
 		// Code
 		'code'       => array(),
 		'pre'        => array(

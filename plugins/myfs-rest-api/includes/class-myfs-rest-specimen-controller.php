@@ -54,9 +54,10 @@ class MYFS_REST_Specimen_Controller extends WP_REST_Controller {
 	 * @return WP_Error|true True if the request has read access, WP_Error object otherwise.
 	 */
 	public function get_items_permissions_check( $request ) {
+		return true;
 		if ( is_user_logged_in() )
 			return true;
-		else 
+		else
 			return new WP_Error( 'user_not_logged_in', __( 'You need to be logged in to access this.' ), array( 'status' => 400 ) );
 	}
 
@@ -70,7 +71,7 @@ class MYFS_REST_Specimen_Controller extends WP_REST_Controller {
 	 */
 	public function get_items( $request ) {
 		$specimen = new DarwinCoreSpecimen( null );
-		$schema = $specimen->get_schema();
+		$schema = apply_filters( 'myfs-api-specimen-get-schema', $specimen->get_schema() );
 
 		return new WP_REST_Response( $schema, 200 );
 	}

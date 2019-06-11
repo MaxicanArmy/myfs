@@ -1,13 +1,32 @@
-
 jQuery(document).ready(function($) {
 
-  var action = $('#action').val();
-
+  $("[class*='dwc-specimen-nav-'] a").on("click", function() {
+    $('#dwc-specimen-nav li').removeClass('active');
+    //$(this).parent().addClass('active');
+    $("#dwc-specimen-nav li a[data-target="+$(this).attr('data-target')+"]").parent().addClass('active');
+    $("#darwin-core div[class^='dwc-specimen-content-']").css("display","none");
+    $("."+ $(this).attr('data-target')).css("display","block");
+  });
+/*
+  $(".dwc-class-description > ol > li").on("click", function() {
+    if ($(this).attr('data-target') == 'plus') {
+      $(this).attr('data-target','minus');
+      $(this).children('a').html('-');
+      $(this).children('ol').css('display','block');
+    } else if ($(this).attr('data-target') == 'minus') {
+      $(this).attr('data-target','plus');
+      $(this).children('a').html('+');
+      $(this).children('ol').css('display','none');
+    }
+  });
+*/
   function sendFileToServer(formData,status) {
-    formData.append('upload_media_for_dwc_specimen_nonce', $('#upload_media_for_dwc_specimen_nonce').val());
+    formData.append('dwc_specimen_upload_media_nonce', $('#dwc_specimen_upload_media_nonce').val());
     formData.append('action', $('#upload_media_action').val());
     formData.append('dwc_specimen_id', $('#dwc_specimen_id').val());
 
+    $('#dwc-dragndrop').css('display','none');
+    $('#dwc-dragndrop-loading').css('display','block');
     var extraData ={}; //Extra Data.
     var jqXHR=$.ajax({
       xhr: function() {
@@ -38,29 +57,27 @@ jQuery(document).ready(function($) {
           status.setProgress(0);
           alert( response.data[0].message );
         } else  {
-          window.location.href= "/dwc-specimen/" + response.data;
-          /*
-          if (action == "ac_media_upload_dwc_specimen") {
-            location.reload();  //maybe click the update button instead. this will reload page and not lose any changes the user has made but not saved
+          console.log(response);
+          $('#dwc-specimen-image-preview').append("<div class='dwc-image-preview'><img src='"+response.data.thumb_src[0]+"' /></div>");
+          $('#image-summary').append("<div class='dwc-image-preview'><img src='"+response.data.thumb_src[0]+"' /></div>");
+          if ($('#dwc_specimen_id').val() == 0) {
+            $('#dwc_specimen_id').val(response.data.id);
+            $('#dwc-delete-specimen').css('display','block');
+            $('#dwc-specimen-header-id').text("Specimen "+response.data.id);
+            $('#dwc-specimen-header-author').text("Author: "+response.data.author_name);
           }
-          else if (action == "ac_media_upload_dwc_wizard") {
-            console.log(response);
-            $('#dwc_specimen_id').val(response.data);
-            $("#step-1-continue").prop('disabled', false);
-            $("#post_title").val("Specimen " + response.data);
-          }
-          else if (action == "ac_media_upload_wizard") {
-            $('#ac_media_id').val(response);
-            $("#step-1-continue").prop('disabled', false);
-            $("#post_title").val("Media " + response.data);
-          }
-          */
+          $('#dwc-specimen-header-last-updated').text("Updated: "+response.data.last_updated);
+          $('#dwc-specimen-nav li.dwc-specimen-nav-Images').addClass('hascontent');
         }
       },
       error: function(response) {
-          console.log(response);
-          status.setProgress(0);
-          alert( response.responseJSON.data[0].message );
+        console.log(response);
+        status.setProgress(0);
+        alert( response.responseJSON.data[0].message );
+      },
+      complete: function(response) {
+          $('#dwc-dragndrop').css('display','block');
+          $('#dwc-dragndrop-loading').css('display','none');
       }
     });
 
@@ -72,9 +89,9 @@ jQuery(document).ready(function($) {
   function createStatusbar(obj) {
     rowCount++;
     var row="odd";
-    if(rowCount %2 ==0) 
+    if(rowCount %2 ==0)
       row ="even";
-    
+
     this.statusbar = $("<div class='statusbar "+row+"'></div>");
     this.filename = $("<div class='filename'></div>").appendTo(this.statusbar);
     this.size = $("<div class='filesize'></div>").appendTo(this.statusbar);
@@ -96,7 +113,7 @@ jQuery(document).ready(function($) {
       this.filename.html(name);
       this.size.html(sizeStr);
     }
-    this.setProgress = function(progress) {       
+    this.setProgress = function(progress) {      
       var progressBarWidth =progress*this.progressBar.width()/ 100;
 
       this.progressBar.find('div').animate({ width: progressBarWidth }, 10).html(progress + "% ");
@@ -164,24 +181,49 @@ jQuery(document).ready(function($) {
     e.stopPropagation();
     e.preventDefault();
   });
-});
 
-jQuery(document).ready(function($) {
-  /*
-  $("#darwin-core-create-specimen").click( function() {
-    var data = {
-      'action': 'dwc_create_specimen',
-      'dwc_create_specimen_nonce': $( '#dwc_create_specimen_nonce' ).val()
-    };
+  var formInitialState = $('#dwc-specimen-form').serialize();
 
-    // since 2.8 ajaxurl is always defined in the admin header and points to admin-ajax.php
-    jQuery.post(ajaxurl, data, function(response) {
-      window.location.href="/dwc-specimen/" + response;
-    });
+  $('#dwc-specimen-form').change( function() {
+    if (formInitialState !== $('#dwc-specimen-form').serialize() ) {
+      var data = $('#dwc-specimen-form').serialize();
+
+      $.ajax({
+        type: "POST",
+        url: ajaxurl,
+        data: data,
+        success: function(response){
+          if( !response.success ) {
+            console.log(response);
+          } else  {
+            if ($('#dwc_specimen_id').val() == 0) {
+              $('#dwc_specimen_id').val(response.data.id);
+              $('#dwc-delete-specimen').css('display','block');
+              $('#dwc-specimen-header-id').text("Specimen "+response.data.id);
+              $('#dwc-specimen-header-author').text("Author: "+response.data.author_name);
+            }
+            $('#dwc-specimen-header-last-updated').text("Updated: "+response.data.last_updated);
+            response.data.hascontent.map( function(c) {
+              $('#dwc-specimen-nav li.dwc-specimen-nav-'+c).addClass('hascontent');
+            });
+            response.data.terms.map( function(v, k) {
+              if (response.data.values[k] == "UNKNOWN") {
+                $('span#'+v+'-summary').addClass("dwc-unknown");
+              } else {
+                $('span#'+v+'-summary').removeClass("dwc-unknown");
+              }
+              $('span#'+v+'-summary').text(response.data.values[k]);
+            });
+          }
+        },
+        error: function(response) {
+          console.log(response);
+        }
+      });
+    }
   });
-  */
 
-  $("#darwin-core-delete-specimen").click( function() {
+  $("#dwc-delete-specimen").click( function() {
     if (window.confirm("Are you sure?")) {
       var data = {
         'action': 'delete_dwc_specimen',
@@ -205,9 +247,48 @@ jQuery(document).ready(function($) {
             alert( response.responseJSON.data[0].message );
         }
       });
-    } 
+    }
   });
 
+  $(".curate-specimen").click( function() {
+    var data = {
+      'action': 'curate_specimen',
+      'grade' : $(this).attr('data-target'),
+      'curate_dwc_specimen_nonce': $( '#curate_dwc_specimen_nonce' ).val(),
+      'dwc_specimen_id': $( '#dwc_specimen_id' ).val()
+    };
+
+    $.ajax({
+      type: "POST",
+      url: ajaxurl,
+      data: data,
+      success: function(response){
+        if( !response.success ) {
+          console.log(response);
+        } else  {
+          if (response.data['grade'] == 'research') {
+            $( '#Occurrence_occurrenceID' ).val(response.data);
+            $( '#Occurrence_occurrenceID-summary' ).text(response.data);
+            $( '#Occurrence_occurrenceID-summary' ).removeClass("dwc-unknown");
+            $( '#research-grade-status' ).html("<span class='research-grade-label'>★ RESEARCH GRADE</span>");
+          } else if (response.data['grade'] == 'downgrade') {
+            console.log(response.data);
+            //should probably send user back to the curation feed
+          } else {
+          $( '#research-grade-status' ).html("");
+          }
+        }
+      },
+      error: function(response) {
+          console.log(response);
+          alert( response.responseJSON.data[0].message );
+      }
+    });
+  });
+});
+
+jQuery(document).ready(function($) {
+  /*
   var formInitialState = $('#dwc-specimen-update-form').serialize();
   var updateMsg = $("#darwin-core-update-msg");
 
@@ -218,7 +299,7 @@ jQuery(document).ready(function($) {
         .removeClass('dwc-success')
         .css('display', 'inline-block');
     }
-    else 
+    else
       $("#darwin-core-update-msg").html('');
   });
 
@@ -252,7 +333,7 @@ jQuery(document).ready(function($) {
       }
     });
   });
-
+  */
   $("#dwc-upload-media-url").click( function() {
     var data = {
         'action': 'upload_media_url_for_dwc_specimen',
@@ -288,7 +369,7 @@ jQuery(document).ready(function($) {
         if (!mapNode) return; // bail if no mapNode to make map
         var lat = $('#Location_decimalLatitude').val();
         var long = $('#Location_decimalLongitude').val();
-        
+
         if (lat == '' || long == '') {
           $( "div#dwc-fossil-map-container" ).html('<p>Latitude and Longitude must be set to display the location map.</p>');
           return;
@@ -310,7 +391,7 @@ jQuery(document).ready(function($) {
             title: $('#fossil-taxon-name').val(),
             clickable: false,
         }).setMap(new google.maps.Map(mapNode, mapOptions));
-      
+
     }
 
     function dwc_geocode(place) {
@@ -322,11 +403,11 @@ jQuery(document).ready(function($) {
             if ( place.city ) address += place.city + " ";
             if ( place.zip_code ) address += place.zip_code + " ";
             if ( place.country ) address += place.country;
-        } 
+        }
 
         return $.ajax({
             url: 'https://maps.googleapis.com/maps/api/geocode/json',
-            data: { 
+            data: {
                 'address': address
             },
             dataType: 'json',
@@ -414,6 +495,7 @@ jQuery(document).ready(function($) {
                       });
                       dwc_init_map();
                   });
+                  $('#dwc-specimen-form').change();
                   //save_prompt();
               } catch(e) {
                 console.warn("Geocode threw error", e);
@@ -434,7 +516,8 @@ jQuery(document).ready(function($) {
 (function ($) {
   "use strict";
 
-  var ranks = ["common", "kingdom", "phylum", "class", "order", "family", "genus", "species"];
+  var ranks = ["vernacularName", "kingdom", "phylum", "class", "order", "family", "genus", "subgenus", "specificEpithet", "infraspecificEpithet", "scientificNameAuthorship"]; //common -> vernacularName, species -> specificEpithet
+  var ranks_assoc = {"common":"vernacularName", "kingdom":"kingdom", "phylum":"phylum", "class":"class", "order":"order", "family":"family", "genus":"genus", "subgenus":"subgenus","species":"specificEpithet", "infraspecificEpithet":"infraspecificEpithet","scientificNameAuthorship":"scientificNameAuthorship"};
 
   function dwc_load_taxa(taxon_name) {
     var url = "//paleobiodb.org/data1.1/taxa/list.json?name=" +
@@ -447,15 +530,15 @@ jQuery(document).ready(function($) {
       success: function (resp) {
         resp.records.forEach(function (taxon) {
           taxon = dwc_normalize_taxon(taxon);
-          $("#darwin-core #Taxon_" + taxon.rank)
+          $("#darwin-core #Taxon_" + ranks_assoc[taxon.rank])
             .val(taxon.taxon_name);
         });
       },
       complete: function (data) {
-        
+        $('#dwc-specimen-form').change();
       },
       error: function (err) {
-        
+
       }
     });
   }
@@ -484,8 +567,10 @@ jQuery(document).ready(function($) {
 
   function dwc_set_taxon(taxon) {
     dwc_reset_taxa();
-    $("#darwin-core #Taxon_" + taxon.rank)
-      .val(taxon.taxon_name);
+    //$("#darwin-core #Taxon_" + taxon.rank)
+    //  .val(taxon.taxon_name);
+    console.log(taxon.rank);
+    console.log(taxon.taxon_name);
     dwc_load_taxa(taxon.taxon_name);
   }
 
@@ -520,8 +605,9 @@ jQuery(document).ready(function($) {
             .click(function () {
               $("ul#edit-fossil-taxon-results").empty();
               $("#edit-fossil-taxon-confirmation").remove();
-              $("#improve-fossil-taxon").popup('hide');
+              $("#dwc-improve-fossil-taxon").popup('hide');
               dwc_set_taxon(taxon);
+              $('#dwc-edit-fossil-taxon-name').val("");
             })
       );
   }
@@ -640,23 +726,24 @@ jQuery(document).ready(function($) {
         5: 'earliestAgeOrLowestStage'
     };
 
-    var DWC_SCALES_NAMES = ['eon', 'era', 'period', 'epoch', 'age'];
+    var DWC_SCALES_NAMES = ['earliestEonOrLowestEonothem', 'earliestEraOrLowestErathem', 'earliestPeriodOrLowestSystem', 'earliestEpochOrLowestSeries', 'earliestAgeOrLowestStage'];
 
     var GEO_DATA;
 
     var selected = false;
 
-    function dwc_reset_geochronology() {
+    function dwc_reset_geologicalContext() {
         $.map(DWC_SCALES_NAMES, function(level) {
-            $('#fossil-geochronology-' + level).html(
-                '<span class="unknown">Unknown</span>'
-            )
+            $('#GeologicalContext_' + level).val('')
+            .css('background-color', '')
+            .css('color', '');
+            $('#GeologicalContext_' + level + '-summary').val('')
             .css('background-color', '')
             .css('color', '');
         });
     }
 
-    function dwc_load_geochronology() {
+    function dwc_load_geologicalContext() {
         var url = "//paleobiodb.org/data1.1/intervals/list.json" +
             "?scale=1&vocab=pbdb";
 
@@ -667,7 +754,7 @@ jQuery(document).ready(function($) {
 
             /**
              * Re-organize results from the PBDB.
-             * 
+             *
              * Certain features are not currently supported by PBDB, so
              * that's why we're doing it here in the client.
              */
@@ -684,42 +771,46 @@ jQuery(document).ready(function($) {
                 });
 
                 /* Load the data into the interface */
-                dwc_populate_geochronology_ui(GEO_DATA);
+                dwc_populate_geologicalContext_ui(GEO_DATA);
 
                 /* Load the data into the select box */
-                dwc_populate_geochronology_select(GEO_DATA);
+                dwc_populate_geologicalContext_select(GEO_DATA);
 
                 /* Let everyone know that we're good to go... */
-                $('#fossil-geochronology-success').show().fadeOut();
+                $('#fossil-geologicalContext-success').show().fadeOut();
             },
             complete: function(data) {
-                $('#fossil-geochronology-loading').hide();
+                $('#fossil-geologicalContext-loading').hide();
             },
             error: function(err) {
                 console.log(err);
-                $('#fossil-geochronology-error').show().fadeOut();
+                $('#fossil-geologicalContext-error').show().fadeOut();
             }
         });
     }
 
-    function dwc_populate_geochronology_ui(data) {
+    function dwc_populate_geologicalContext_ui(data) {
         var intervals = [], match = false, highest_level = 0;
 
         data.forEach(function(interval) {
             intervals[interval.interval_no] = interval;
-            if ($('#darwin-core #Geochronology_'+DWC_SCALES[interval.level]).val() === interval.interval_name && interval.level > highest_level) {
+            if ($('#darwin-core #GeologicalContext_'+DWC_SCALES[interval.level]).val() === interval.interval_name && interval.level > highest_level) {
               highest_level = interval.level;
               match = interval.interval_no;
             }
         });
-        
+
         /**
          * Populate parents of the time interval
          */
         var current_interval = match ? intervals[match] : null;
         selected = match ? intervals[match].interval_name : false;
         while (current_interval) {
-            $('#darwin-core #Geochronology_' + DWC_SCALES[current_interval.level])
+            $('#darwin-core #GeologicalContext_' + DWC_SCALES[current_interval.level])
+                .val(current_interval.interval_name)
+                .css('background-color', current_interval.color)
+                .css('color', (parseInt(current_interval.color.slice(1), 16) > 0xffffff / 2) ? '#000' : '#fff');
+            $('#darwin-core #GeologicalContext_' + DWC_SCALES[current_interval.level] + '-summary')
                 .val(current_interval.interval_name)
                 .css('background-color', current_interval.color)
                 .css('color', (parseInt(current_interval.color.slice(1), 16) > 0xffffff / 2) ? '#000' : '#fff');
@@ -727,8 +818,8 @@ jQuery(document).ready(function($) {
         }
     }
 
-    function dwc_populate_geochronology_select(data) {
-        var select = $('select#dwc-edit-fossil-geochronology').empty();
+    function dwc_populate_geologicalContext_select(data) {
+        var select = $('select#dwc-edit-fossil-geologicalContext').empty();
 
         var optgroups = {}, scale_label;
         optgroups[0] = $('<optgroup />').attr('label', 'Unknown');
@@ -774,27 +865,28 @@ jQuery(document).ready(function($) {
         }
 
         if (selected) {
-            $('select#dwc-edit-fossil-geochronology option[value="' + selected + '"]').attr('selected','selected');
-        } 
+            $('select#dwc-edit-fossil-geologicalContext option[value="' + selected + '"]').attr('selected','selected');
+        }
 
         select.change(function() {
-            var option = $('select#dwc-edit-fossil-geochronology option:selected');
-            $('#darwin-core #Geochronology_' + option.data('level')).val(option.data('name'));
+            dwc_reset_geologicalContext();
+            var option = $('select#dwc-edit-fossil-geologicalContext option:selected');
+            $('#darwin-core #GeologicalContext_' + option.data('level')).val(option.data('name'));
 
-            //reset_geochronology();
-            $('div#improve-fossil-geochronology').popup("hide");
-            dwc_populate_geochronology_ui(GEO_DATA);
+            $('div#improve-fossil-geologicalContext').popup("hide");
+            dwc_populate_geologicalContext_ui(GEO_DATA);
+            $('#dwc-specimen-form').change();
             //save_prompt();
         });
     }
-    
+
     $(function() {
-        dwc_load_geochronology();
+        dwc_load_geologicalContext();
 
-        //$('#dwc-edit-fossil-geochronology-save').click(save_geochronology);
-        //$('#dwc-edit-fossil-geochronology-comment-toggle > button').click(toggle_comment);
+        //$('#dwc-edit-fossil-geologicalContext-save').click(save_geologicalContext);
+        //$('#dwc-edit-fossil-geologicalContext-comment-toggle > button').click(toggle_comment);
 
-        $('#improve-fossil-geochronology').popup({
+        $('#improve-fossil-geologicalContext').popup({
             type: 'tooltip',
             opacity: 1,
             background: false,

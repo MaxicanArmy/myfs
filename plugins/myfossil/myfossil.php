@@ -130,7 +130,7 @@ final class MYFOSSIL {
 					$a = bp_activity_get( array( 'in' => array( $r->item_id ), 'max' => 1 ) );
 
 					if ( $a['activities'][0]->user_id != get_current_user_id() ) {
-						
+
 						$notification_args = array(
 							'recipient' => $a['activities'][0]->user_id,
 							'title' => 'New comment!',
@@ -187,7 +187,7 @@ final class MYFOSSIL {
 
 	//turns app image shortcodes in to thumbnails that link to a lightbox image gallery for the activity stream
 	public function myfs_app_image_shortcode( $atts, $content = '', $tag = '' ) {
-	    return gallery_shortcode( array( 'id' => $atts['id'], 'ids' => array( $atts['id'] ), 'columns' =>  1, 'link' => 'file' ) );
+	    return gallery_shortcode( array( 'id' => $atts['id'], 'ids' => $atts['id'], 'columns' =>  5, 'link' => 'file' ) );
 	}
 
 	// Enable Shortcodes for Side-wide Activity Stream

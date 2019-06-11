@@ -8,14 +8,19 @@
  */
 
 get_header(); ?>
+<div id="emuseum-header" class="container-fluid">
+  <div class="container">
+    <h3>Welcome to the</h3>
+    <h1>eMuseum<span>Specimens</span></h1>
+  </div>
+</div>
 <div class="container" id="darwin-core">
 	<div id="primary" class="content-area">
 		<main id="main" class="site-main" role="main">
 		<?php if (is_user_logged_in()) : ?>
 			<div class="row">
 				<div class="col-xs-2 col-xs-offset-10">
-					<?php wp_nonce_field('dwc_create_specimen_ajax', 'dwc_create_specimen_nonce'); ?>
-					<a href="/darwin-core-wizard" class="btn btn-primary ajax-btn">New Specimen</a>
+					<a href="/create-specimen" class="btn btn-primary">New Specimen</a>
 				</div>
 			</div>
 		<?php endif; ?>
@@ -25,21 +30,20 @@ get_header(); ?>
 				global $wp_query;
 				$paged = ( get_query_var('paged') ) ? get_query_var('paged') : 1;
 
-				if ( $wp_query->have_posts() ) { 
-					echo "<table id='specimen-archive-list'><th>&nbsp;</th><th>Taxon</th><th>Location</th><th>Geochronology</th><th>Lithostratigraphy</th>";
+				if ( $wp_query->have_posts() ) {
+					echo "<table id='specimen-archive-list'><th>&nbsp;</th><th>Taxon</th><th>Location</th><th>Geological Context</th>";
 					while ( $wp_query->have_posts() ) :
-						$wp_query->the_post(); 
+						$wp_query->the_post();
 						$specimen = new DarwinCoreSpecimen( get_the_ID() ); ?>
 						<tr class="hover-hand" data-href="<?= get_post_type_archive_link(DarwinCoreSpecimen::POST_TYPE) ?><?= the_id() ?>/">
 							<td><?php darwin_core::specimen_featured_thumbnail( get_the_ID() ); ?><p><?= get_the_title() ?><br />by <a href="<?= bp_core_get_user_domain( get_the_author_meta( 'ID' ) ) ?>"><?= get_the_author() ?></a></p></td>
 							<td><?php $specimen->display_precise_meta( 'Taxon', 3 ); ?></td>
 							<td><?php $specimen->display_precise_meta( 'Location', 2 ); ?></td>
-							<td><?php $specimen->display_precise_meta( 'Geochronology', 1 ); ?></td>
-							<td><?php $specimen->display_precise_meta( 'Lithostratigraphy', 3 ); ?></td>
-				  		</tr>
-					<?php 
+							<td><?php $specimen->display_precise_meta( 'GeologicalContext', 3 ); ?></td>
+				  	</tr>
+					<?php
 					endwhile;
-					
+
 					echo "</table>";
 					$args = array(
 						'base'               => '/dwc-specimen%_%',
@@ -60,7 +64,7 @@ get_header(); ?>
 					);
 
 					$paginate_links = paginate_links( $args );
-					
+
 					if ( $paginate_links ) {
 				        echo '<div class="pagination">';
 				        echo $paginate_links;
@@ -77,5 +81,15 @@ get_header(); ?>
 			</div>
 		</main><!-- .site-main -->
 	</div><!-- .content-area -->
+</div>
+<div id="emuseum-footer" class="container-fluid">
+  <div class="container">
+    <p>Explore more of the <span>eMuseum</span> :</p>
+    <div class="row">
+      <div id="threed-gallery-footer-jumpoff" class="col-md-4 emuseum-footer-jumpoff"><a href="/3d-gallery"><p>3D Specimens</p></a></div>
+      <div id="exhibits-footer-jumpoff" class="col-md-4 emuseum-footer-jumpoff"><a href="/dwc-exhibits"><p>Exhibits</p></a></div>
+	    <div id="aboutus-footer-jumpoff" class="col-md-4 emuseum-footer-jumpoff"><a href="/emusuem-aboutus"><p>About Us</p></a></div>
+    </div>
+  </div>
 </div>
 <?php get_footer(); ?>

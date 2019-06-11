@@ -102,7 +102,7 @@ final class audubon_core {
 		add_action( 'admin_menu', array($this, 'audubon_core_admin_settings_menu' ) );	//set up admin menu for managing plugin
 		add_filter( 'wp_check_filetype_and_ext', array($this, 'allow_stls'), 100, 4 );	//allows STL files to be uploaded
 
-		add_action( 'init', array( $this, 'register_custom_post_type' ) );	
+		add_action( 'init', array( $this, 'register_custom_post_type' ) );
 		add_filter( 'single_template', array( $this, 'audubon_core_single_templates' ) );				//override template for single posts for audubon core posts
 		add_filter( 'archive_template', array( $this, 'audubon_core_archive_templates' ) );				//override template for archives for audubon core
 		add_filter( 'page_template', array( $this, 'audubon_core_page_templates' ) );					//override template for pages for audubon core
@@ -217,10 +217,14 @@ final class audubon_core {
 	        if( file_exists(plugin_dir_path( __FILE__ ) . 'templates/audubon-core-wizard.php') ) {
 	            return plugin_dir_path( __FILE__ ) . 'templates/audubon-core-wizard.php';
 	        }
+	    } elseif ($wp_query->query_vars['pagename'] == '3d-gallery') {
+	        if( file_exists(plugin_dir_path( __FILE__ ) . 'templates/three-d-gallery.php') ) {
+	            return plugin_dir_path( __FILE__ ) . 'templates/three-d-gallery.php';
+	        }
 	    }
 	    return $archive;
 	}
-	
+
 	/**
 	 * Creates an Audubon Core Media post
 	 *
@@ -244,7 +248,7 @@ final class audubon_core {
 	    );
 
 	    $id = wp_insert_post( $args );
-	    
+
 		$update_args = array(
 			'ID'           => $id,
 			'post_title'   => 'Media ' . $id
@@ -261,7 +265,7 @@ final class audubon_core {
 
 		$media = get_post( $attach_id );
 		$resource_url = $media->guid;
-		
+
 		preg_match( "#\.([A-Za-z]+)$#", $resource_url, $matches );
 		update_post_meta( $id, 'resource_ext', strtolower($matches[1]) );
 		update_post_meta( $id, 'resource_url', preg_replace('#^https?:#', '', $resource_url ) );
@@ -271,18 +275,18 @@ final class audubon_core {
 
 	public function process_media_url_upload($resource_url, $post_parent) {
 		$id = self::create_ac_media( $post_parent );
-		
+
 		$resource_url = preg_replace("#\?.*$#", "", $resource_url);
 		$resource_url = preg_replace("#www.dropbox.com#", "dl.dropboxusercontent.com", $resource_url);
 		$resource_url = preg_replace("#dropbox.com#", "dl.dropboxusercontent.com", $resource_url);
-		
+
 		preg_match( "#\.([A-Za-z]+)$#", $resource_url, $matches );
 		update_post_meta( $id, 'resource_ext', strtolower($matches[1]) );
-		update_post_meta( $id, 'resource_url', preg_replace('#^https?:#', '', $resource_url ) ); 
+		update_post_meta( $id, 'resource_url', preg_replace('#^https?:#', '', $resource_url ) );
 
 		return $id;
 	}
-	
+
 	/**
 	 * Processes the upload of Audubon Core Media
 	 *
@@ -309,7 +313,7 @@ final class audubon_core {
 
 		wp_send_json_success( $id , 201 );
 	}
-	
+
 	/**
 	 * Processes the upload of Audubon Core Media URL
 	 *
@@ -333,7 +337,7 @@ final class audubon_core {
 
     	if ( !$id )
 			wp_send_json_error( new WP_Error( 'upload_ac_media_url_error', __( "There was a problem with saving the URL." ) ), 400 );
-    	
+
 		wp_send_json_success( $id , 201 );
 	}
 
@@ -367,7 +371,7 @@ final class audubon_core {
     	}
 
     	if ( $attach_id = media_handle_upload( 'ac_media_file_thumb', 0 ) ) {
-			update_post_meta( $post->ID, 'thumb_id', $attach_id ); 
+			update_post_meta( $post->ID, 'thumb_id', $attach_id );
     	}
 		else {
     		wp_send_json_error( new WP_Error( 'update_ac_media_thumb_failure_error', __( "Something went wrong saving the thumbnail." ) ), 400 );
@@ -398,14 +402,14 @@ final class audubon_core {
     	}
 
 		$ac_title = empty($_POST['post_title'] ) ? 'Media '.$post->ID : $_POST['post_title'];
-	    
+
 		$args = array(
 			'ID'           	=> $post->ID,
 			'post_title'   	=> $ac_title,
 			'post_name'		=> $post->ID
 		);
 		wp_update_post( $args);
-		
+
         $media = new AudubonCoreMedia( $post->ID );
         $media->save($_POST);
 
@@ -439,24 +443,24 @@ final class audubon_core {
 		$children = get_children( $args );
 
 		if ( wp_delete_post( $post->ID ) ) {
-			
+
 			foreach ($children as $child) {
 				wp_delete_attachment( $child->ID  );
 			}
-			
+
 		} else {
     		wp_send_json_error( new WP_Error( 'delete_ac_media_failure_error', __( "Something went wrong during deletion." ) ), 400 );
 		}
-		
+
 		wp_send_json_success( $post->ID , 200 );
 	}
 
-	public static function display_dwc_associated_media($dwc, $owner) {
+	public static function display_dwc_associated_media($dwc_id) {
 	?>
 	<div id="audubon-core">
 		<?php
 		$args = array(
-			'post_parent' => $dwc->ID,
+			'post_parent' => $dwc_id,
 			'post_type' => 'ac_media'
 		);
 		$children = get_children($args);
@@ -464,10 +468,10 @@ final class audubon_core {
 		if ( count($children) > 0 ) {
 			echo '<div class="slick-holder">';
 			foreach ($children as $child) {
-				
+
 				echo "<div class='ac-wrapper'>";
 				audubon_core::display_ac_media("main", $child, '320');
-				
+
 				echo "<p><a href='/ac-media/" . $child->ID . "'>View " . $child->post_title . "</a></p></div><!-- .ac-wrapper -->";
 			}
 			echo "</div><!-- .slick-holder -->";
@@ -475,6 +479,45 @@ final class audubon_core {
 		?>
 	</div><!-- #audubon-core -->
 	<?php
+	}
+
+	public static function get_image_summary_html($dwc_id) {
+		$rval = "";
+		$args = array(
+			'post_parent' => $dwc_id,
+			'post_type' => 'ac_media'
+		);
+		$children = get_children($args);
+
+		if ( count($children) > 0 ) {
+			foreach ($children as $ac_media) {
+				$rval .= "<div class='ac-wrapper'>";
+				$thumb_id = get_post_meta( $ac_media->ID, 'thumb_id', true );
+				$media_url = get_post_meta( $ac_media->ID, 'resource_url', true );
+				$media_ext = get_post_meta( $ac_media->ID, 'resource_ext', true );
+
+				if ($media_ext == 'stl') {
+					if ($thumb_id != "" && $thumb_id != NULL) {
+						$rval .= "<div class='crop'><img src='" . wp_get_attachment_image_src( $thumb_id, 'thumbnail' )[0] . "' class='stl-thumbnail' /></div>";
+					} else {
+						$rval .= "<div class='crop'><img src='/wp-content/uploads/2017/06/stl-no-thumb.png' class='stl-thumbnail' /></div>";
+					}
+				} else {
+					$args = array(
+						'post_parent' => $ac_media->ID,
+						'post_type' => 'attachment'
+					);
+					$attachments = get_children($args);
+					$media = array_shift( $attachments );
+					if ( !is_null( $media ) ) {
+						$rval .= "<div class='crop'>".wp_get_attachment_image( $media->ID, 'thumbnail', false, array('class'=>'wp-image-'.$media->ID) )."</div>";
+					}
+				}
+				$rval .= "<p><a href='/ac-media/" . $ac_media->ID . "'>View " . $ac_media->post_title . "</a></p></div><!-- .ac-wrapper -->";
+			}
+		}
+
+		return $rval;
 	}
 
 	public static function display_ac_media($context, $ac_media, $size) { //context should be "thumb" or "main"
@@ -488,7 +531,7 @@ final class audubon_core {
 					echo "<div class='crop'><img src='" . wp_get_attachment_image_src( $thumb_id, 'thumbnail' )[0] . "' class='stl-thumbnail' /></div>";
 				} else {
 					echo "<div class='crop'><img src='/wp-content/uploads/2017/06/stl-no-thumb.png' class='stl-thumbnail' /></div>";
-				} 
+				}
 			} else {
 				$args = array(
 					'post_parent' => $ac_media->ID,
@@ -567,7 +610,7 @@ final class audubon_core {
 		$org = array();
 		$class_layout = array();
 
-        $classes = $wpdb->get_results( "SELECT " . 
+        $classes = $wpdb->get_results( "SELECT " .
             $classes_table_name . ".classID, " .
             $classes_table_name . ".className, " .
             $classes_table_name . ".displayName AS 'classDisplayName', " .
@@ -627,7 +670,7 @@ final class audubon_core {
 	        	</form>";
 		}
 		else if ($tab == 'second') {
-	        $enabled_terms = $wpdb->get_results( "SELECT " . 
+	        $enabled_terms = $wpdb->get_results( "SELECT " .
 	            $classes_table_name . ".className, " .
 	            $classes_table_name . ".displayName AS 'classDisplayName', " .
 	            $classes_table_name . ".layout, " .
@@ -656,7 +699,7 @@ final class audubon_core {
 	        foreach ($org as $class_id => $values) {
 	        	echo "<h1>".$values['parent']['classDisplayName']."</h1>
 	        		<table id='ac-terms' class='ac-terms'><thead><tr><th>Term Name</th><th>Display Name</th><th>Value Type</th><th>Enabled</th></tr></thead><tbody id='".$class_id."'>";
-	        		
+
 	        	if (isset($values['children']))	{
 		        	foreach ($values['children'] as $current) {
 		        		echo "<tr class='".(($flag = !$flag) ? 'row-even' : 'row-odd')."'>
@@ -692,7 +735,7 @@ final class audubon_core {
 
 	public function options_page_tabs($current = 'first') {
 	    $tabs = array(
-	        'first'   => __("Classes", 'plugin-textdomain'), 
+	        'first'   => __("Classes", 'plugin-textdomain'),
 	        'second'  => __("Terms", 'plugin-textdomain')
 	    );
 	    $html =  '<h2 class="nav-tab-wrapper">';
@@ -735,7 +778,7 @@ final class audubon_core {
                 'parent_url' => bp_displayed_user_domain(),
                 'parent_slug' => $bp->members->slug . bp_displayed_user_id(),
                 'position' => 60,
-                'show_for_displayed_user' => true,	
+                'show_for_displayed_user' => true,
                 'screen_function' => array( $this, 'audubon_core_bp_display_collection_page')
             )
         );
@@ -764,12 +807,19 @@ final class audubon_core {
 					<a id="ac-launch-wizard" href="/audubon-core-wizard" class="btn btn-primary">Add Media</a>
 				</div>
 			</div>
-<?php
-			$wp_query = new WP_Query( array( 
-				'author' => get_current_user_id(),
+			<?php
+			$query_args = array(
+				'author' => bp_displayed_user_id(),
 				'post_type' => 'ac_media',
-				'posts_per_page' => -1
-			) );
+				'posts_per_page' => -1,
+				'post_status' => 'publish'
+			);
+
+			if (bp_displayed_user_id() == get_current_user_id())
+				$query_args['post_status'] = array('publish', 'draft');
+
+			$wp_query = new WP_Query( $query_args );
+
 			global $post;
 			$row_counter = 0;
 			if ( $wp_query->have_posts() ) {
@@ -827,7 +877,7 @@ final class audubon_core {
 		if ( wp_verify_nonce( $_POST['ac_media_create_nonce'], 'ac_media_create_post' ) ) {
 
 			$dwc_id = (!isset($_POST['dwc_specimen_id']) || $_POST['dwc_specimen_id'] === '') ? 0 : $_POST['dwc_specimen_id'];
-			
+
 			if ($dwc_id == 0 && class_exists('DarwinCoreSpecimen')) {
 				$dwc_defaults = array(
 			        'post_title' => '',
@@ -836,7 +886,7 @@ final class audubon_core {
 			    );
 
 			    $dwc_id = wp_insert_post( $dwc_defaults );
-			    
+
 				$dwc_update = array(
 					'ID'           	=> $dwc_id,
 					'post_title'   	=> 'Specimen ' . $dwc_id,
@@ -853,7 +903,7 @@ final class audubon_core {
 		    );
 
 		    $ac_id = wp_insert_post( $ac_defaults );
-		    
+
 			$ac_update = array(
 				'ID'           => $ac_id,
 				'post_title'   => 'Media ' . $ac_id
@@ -866,7 +916,7 @@ final class audubon_core {
 				$media = get_post($attach_id);
 				update_post_meta($ac_id, 'resource_url', $media->guid);
 
-			} 
+			}
 			else if ($_POST['resource_url'] !== "") {
 				update_post_meta($ac_id, 'resource_url', $_POST['resource_url']);
 			}
@@ -882,7 +932,7 @@ final class audubon_core {
 		$classes_table_name = $wpdb->prefix . 'audubon_core_classes';
 		$terms_table_name = $wpdb->prefix . 'audubon_core_terms';
 		$vocabulary_table_name = $wpdb->prefix . 'audubon_core_vocabulary';
-		
+
 		$charset_collate = $wpdb->get_charset_collate();
 
 		$classes_sql = "CREATE TABLE $classes_table_name (
@@ -899,7 +949,7 @@ final class audubon_core {
 			termName varchar(55) DEFAULT '' NOT NULL,
 			displayName varchar(55) DEFAULT '' NOT NULL,
 			valueType varchar(55) DEFAULT 'text' NOT NULL,
-			class mediumint(9) NOT NULL, 
+			class mediumint(9) NOT NULL,
 			enabled boolean NOT NULL,
 			core boolean DEFAULT true NOT NULL,
 			layoutParent smallint(3) DEFAULT 0 NOT NULL,
@@ -932,7 +982,7 @@ final class audubon_core {
 		          'post_status' => 'publish' ,
 		          'post_title' => 'Audubon Core Wizard',
 		          'post_type' => 'page',
-		    );  
+		    );
 		    //insert page and save the id
 		    $newvalue = wp_insert_post( $post, false );
 		}
@@ -940,7 +990,7 @@ final class audubon_core {
 
 	static function audubon_core_install_data() {
 		global $wpdb;
-		
+
 		$classes_table_name = $wpdb->prefix . 'audubon_core_classes';
 		$terms_table_name = $wpdb->prefix . 'audubon_core_terms';
 		$vocabulary_table_name = $wpdb->prefix . 'audubon_core_vocabulary';
@@ -1073,25 +1123,25 @@ final class audubon_core {
 				)
 			)
 		);
-		
+
 		$layout_count = 0;
 		foreach ($input as $class_key => $class_value) {
-			$wpdb->insert( 
-				$classes_table_name, 
-				array( 
+			$wpdb->insert(
+				$classes_table_name,
+				array(
 					'className' => $class_key,
 					'displayName' => $class_value[0],
 					'layout' => '1,' . ++$layout_count
-				) 
+				)
 			);
 
 			$classID = $wpdb->insert_id;
 
 			$order_count = 0;
 			foreach ($class_value[1] as $key => $value) {
-				$wpdb->insert( 
-					$terms_table_name, 
-					array( 
+				$wpdb->insert(
+					$terms_table_name,
+					array(
 						'termName' => $key,
 						'displayName' => $value[0],
 						'valueType' => $value[1],
@@ -1099,20 +1149,20 @@ final class audubon_core {
 						'enabled' => $value[2],
 						'layoutParent' => $classID,
 						'layoutOrder' => ++$order_count
-					) 
+					)
 				);
 
 				$termID = $wpdb->insert_id;
 
 				if (isset($vocab[$key])) {
 					foreach($vocab[$key] as $vocab => $display_vocab) {
-						$wpdb->insert( 
-							$vocabulary_table_name, 
-							array( 
+						$wpdb->insert(
+							$vocabulary_table_name,
+							array(
 								'termID' => $termID,
 								'vocab' => $vocab,
 								'displayVocab' => $display_vocab
-							) 
+							)
 						);
 					}
 				}
@@ -1123,13 +1173,13 @@ final class audubon_core {
 	public function process_ac_update_classes() {
         if ( wp_verify_nonce( $_POST['ac_update_classes_nonce'], 'ac_update_classes_post' ) ) {
 			global $wpdb;
-	        
+
 	        $classes_table_name = $wpdb->prefix . 'audubon_core_classes';
 
         	foreach ($_POST['className'] as $id => $current) {
         		if ($id == 0) {
         			if ($_POST['className'][0] != '' && $_POST['displayName'][0] != '') {
-        				
+
         				$highest_layout = $wpdb->get_results("SELECT " .
         					$classes_table_name.".layout FROM " .
         					$classes_table_name." WHERE " .
@@ -1142,28 +1192,28 @@ final class audubon_core {
         					$layout_row = ($matrix[1] > $layout_row) ? $matrix[1] : $layout_row;
         				}
 
-	        			$wpdb->insert( 
-							$classes_table_name, 
-							array( 
+	        			$wpdb->insert(
+							$classes_table_name,
+							array(
 								'className' => $_POST['className'][0],
 								'displayName' => $_POST['displayName'][0],
 								'layout' => (($_POST['layout'][0] != '') ? $_POST['layout'][0] : '1,'.++$layout_row),
 								'core' => 0
-							) 
+							)
 						);
 	        		}
-        		} 
+        		}
         		else {
-	        		$wpdb->update( $classes_table_name, 
+	        		$wpdb->update( $classes_table_name,
 	        			array(
 		        			'className' => $current,
 		        			'displayName' => $_POST['displayName'][$id],
 		        			'layout' => $_POST['layout'][$id]
-		        		), 
+		        		),
 		        		array(
 		        			'classID' => $id
 		        		),
-		        		array('%s', '%s', '%s'), 
+		        		array('%s', '%s', '%s'),
 		        		'%d'
 		        	);
 	        	}
@@ -1180,16 +1230,16 @@ final class audubon_core {
         	foreach ($_POST['termName'] as $id => $current) {
         		if (strpos($id, 'new') !== false) {
         			if ($_POST['termName'][$id] != '' && $_POST['displayName'][$id] != '') {
-        				
+
         				$highest_layout = $wpdb->get_results("SELECT " .
         					$terms_table_name.".layoutOrder FROM " .
         					$terms_table_name." WHERE " .
         					$terms_table_name.".layoutParent=".$_POST['layoutParent'][$id]." ORDER BY " .
         					$terms_table_name.".layoutOrder DESC LIMIT 1;", 'ARRAY_A');
 
-        				$wpdb->insert( 
-							$terms_table_name, 
-							array( 
+        				$wpdb->insert(
+							$terms_table_name,
+							array(
 								'termName' => $_POST['termName'][$id],
 								'displayName' => $_POST['displayName'][$id],
 								'valueType' => $_POST['valueType'][$id],
@@ -1198,12 +1248,12 @@ final class audubon_core {
 								'core' => 0,
 								'layoutParent' => $_POST['layoutParent'][$id],
 								'layoutOrder' => ++$highest_layout[0]['layoutOrder']
-							) 
+							)
 						);
         			}
-        		} 
+        		}
         		else {
-	        		$wpdb->update( $terms_table_name, 
+	        		$wpdb->update( $terms_table_name,
 	        			array(
 		        			'termName' => $current,
 		        			'displayName' => $_POST['displayName'][$id],
@@ -1211,11 +1261,11 @@ final class audubon_core {
 		        			'layoutParent' => $_POST['layoutParent'][$id],
 		        			'layoutOrder' => $_POST['layoutOrder'][$id],
 		        			'enabled' => ((isset($_POST['enabled'][$id]) && $_POST['enabled'][$id] == 'true') ? 1 : 0 )
-		        		), 
+		        		),
 		        		array(
 		        			'termID' => $id
 		        		),
-		        		array('%s', '%s', '%s', '%d', '%d', '%d', '%d'), 
+		        		array('%s', '%s', '%s', '%d', '%d', '%d', '%d'),
 		        		'%d'
 		        	);
 	        	}

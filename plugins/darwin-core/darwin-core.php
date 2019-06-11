@@ -85,24 +85,26 @@ final class darwin_core {
 	 *
 	 */
 	private function setup() {
-	    define( 'BP_DARWIN_CORE_DIR', dirname( __FILE__ ) );
+		define( 'BP_DARWIN_CORE_DIR', dirname( __FILE__ ) );
 
 		/**
 		 * The code that defines the custom objects to be used.
 		 */
 		require_once plugin_dir_path( realpath( __FILE__ ) ) . 'includes/DarwinCoreSpecimen.php';
+	  require_once plugin_dir_path( realpath( __FILE__ ) ) . 'includes/class-dwc-rest-ingestion-controller.php';
+	  require_once plugin_dir_path( realpath( __FILE__ ) ) . 'includes/class-dwc-rest-user-controller.php';
 
 		/**
 		 * Functions require to interact with other plugin and wordpress core
 		 */
 		//require_once plugin_dir_path( realpath( __FILE__ ) ) . 'includes/bp-support.php';
-		
+
 		//hooks
 
 		add_action( 'wp_head', array( $this, 'darwin_core_ajaxurl' ) );					//define ajaxurl for frontend calls
 		add_action( 'admin_menu', array($this, 'darwin_core_admin_settings_menu' ) );	//set up admin menu for managing plugin
 
-		add_action( 'init', array( $this, 'register_custom_post_type' ) );	
+		add_action( 'init', array( $this, 'register_custom_post_type' ) );
 		add_filter( 'single_template', array( $this, 'darwin_core_single_templates' ) );	//override template for single posts for darwin core posts
 		add_filter( 'archive_template', array( $this, 'darwin_core_archive_templates' ) );	//override template for archives for darwin core
 		add_filter( 'page_template', array( $this, 'darwin_core_page_templates' ) );		//override template for pages for darwin core
@@ -112,108 +114,880 @@ final class darwin_core {
 
 		add_action( 'admin_enqueue_scripts', array( $this, 'darwin_core_admin_scripts' ) );	//admin scripts & styles
 
-        add_action( 'admin_post_dwc_update_classes', array( $this, 'process_dwc_update_classes' ) );	//updates classes from admin console
-        add_action( 'admin_post_dwc_update_terms', array( $this, 'process_dwc_update_terms' ) );		//updates terms from admin console
+    add_action( 'admin_post_dwc_update_classes', array( $this, 'process_dwc_update_classes' ) );	//updates classes from admin console
+    add_action( 'admin_post_dwc_update_terms', array( $this, 'process_dwc_update_terms' ) );		//updates terms from admin console
+
+		add_action( 'wp_ajax_ingest_myfossil_specimens', array( $this, 'ingest_myfossil_specimens' ) ); 									//1. processes specimen update
+		add_action( 'wp_ajax_historic_bp_activity', array( $this, 'create_historic_bp_activity' ) );
+		add_action( 'wp_ajax_publish_image_specimens', array( $this, 'publish_image_specimens' ) );
+		add_action( 'wp_ajax_set_specimen_post_content', array( $this, 'set_specimen_post_content' ) );
 
 		add_action( 'bp_setup_nav', array( $this, 'bp_add_dwc_nav_items' ) );	//add navigation items to buddypress
 
 		/*
 		 *  filters modifying entries that are specific to myfossil. These should be broken out at some point
 		 */
-		add_filter( 'darwin-core-add-owner-Taxon-helper', array($this, 'add_taxon_helper' ) );
-		add_filter( 'darwin-core-add-owner-Location-helper', array($this, 'add_location_helper' ) );
-		add_filter( 'darwin-core-add-owner-Geochronology-helper', array($this, 'add_geochronology_helper' ) );
+		add_filter( 'darwin-core-add-Taxon-helper', array($this, 'add_taxon_helper' ), 10, 2 );
+		//add_filter( 'darwin-core-add-Location-helper', array($this, 'add_location_helper' ), 10, 2 );
+		add_filter( 'darwin-core-add-GeologicalContext-helper', array($this, 'add_geologicalContext_helper' ), 10, 2 );
 
-		add_filter( 'darwin-core-alter-owner-Location-html', array($this, 'alter_owner_location_html' ), 10, 2 );
-		add_filter( 'darwin-core-alter-guest-Location-html', array($this, 'alter_guest_location_html' ), 10, 2 );
+		add_filter( 'darwin-core-alter-owner-Location-html', array($this, 'alter_owner_location_html' ), 10, 3 );
+		add_filter( 'darwin-core-alter-Location-html', array($this, 'alter_location_html' ), 10, 3 );
 
-		add_filter( 'darwin-core-term-owner-group-html', array($this, 'term_group_add_html' ) );
-		add_filter( 'darwin-core-term-owner-formation-html', array($this, 'term_formation_add_html' ) );
-		add_filter( 'darwin-core-term-owner-member-html', array($this, 'term_member_add_html' ) );
+		add_filter( 'dwc-specimen-edit-term-html', array($this, 'term_occurrenceID_edit_html' ), 10, 7 );
 
-		
-        add_action( 'wp_ajax_update_dwc_specimen', array( $this, 'update_dwc_specimen' ) ); 									//1. processes specimen update
-        add_action( 'wp_ajax_nopriv_update_dwc_specimen', array( $this, 'update_dwc_specimen' ) ); 								//1. processes specimen update 
+		add_filter( 'myfs-api-specimen-get-schema', array($this, 'alter_myfs_api_specimen_get_schema' ) );
+		add_filter( 'darwin-core-json-meta-term', array($this, 'alter_darwin_core_json_meta_term' ), 10, 3 );
+		add_filter( 'darwin-core-hide-admin-classes', array($this, 'hide_admin_classes' ) );
 
-        add_action( 'wp_ajax_upload_media_for_dwc_specimen', array( $this, 'upload_media_for_dwc_specimen' ) ); 				//2. processes associated media upload
-        add_action( 'wp_ajax_nopriv_upload_media_for_dwc_specimen', array( $this, 'upload_media_for_dwc_specimen' ) ); 			//2. processes associated media upload
-        
-        add_action( 'wp_ajax_upload_media_url_for_dwc_specimen', array( $this, 'upload_media_url_for_dwc_specimen' ) ); 		//3. processes associated media url
-        add_action( 'wp_ajax_nopriv_upload_media_url_for_dwc_specimen', array( $this, 'upload_media_url_for_dwc_specimen' ) ); 	//3. processes associated media url
-		
-        add_action( 'wp_ajax_delete_dwc_specimen', array( $this, 'delete_dwc_specimen' ) ); 									//4. processes specimen deletion
-        add_action( 'wp_ajax_nopriv_delete_dwc_specimen', array( $this, 'delete_dwc_specimen' ) ); 								//4. processes specimen deletion 
+    add_action( 'wp_ajax_update_dwc_specimen', array( $this, 'update_dwc_specimen' ) ); 									//1. processes specimen update
+    add_action( 'wp_ajax_nopriv_update_dwc_specimen', array( $this, 'update_dwc_specimen' ) ); 								//1. processes specimen update
+
+    add_action( 'wp_ajax_dwc_specimen_upload_media', array( $this, 'dwc_specimen_upload_media' ) );
+    add_action( 'wp_ajax_nopriv_dwc_specimen_upload_media', array( $this, 'dwc_specimen_upload_media' ) );
+
+    add_action( 'wp_ajax_dwc_specimen_upload_terms', array( $this, 'dwc_specimen_upload_terms' ) );
+    add_action( 'wp_ajax_nopriv_dwc_specimen_upload_terms', array( $this, 'dwc_specimen_upload_terms' ) );
+
+    add_action( 'wp_ajax_upload_media_for_dwc_specimen', array( $this, 'upload_media_for_dwc_specimen' ) ); 				//2. processes associated media upload
+    add_action( 'wp_ajax_nopriv_upload_media_for_dwc_specimen', array( $this, 'upload_media_for_dwc_specimen' ) ); 			//2. processes associated media upload
+
+    add_action( 'wp_ajax_upload_media_url_for_dwc_specimen', array( $this, 'upload_media_url_for_dwc_specimen' ) ); 		//3. processes associated media url
+    add_action( 'wp_ajax_nopriv_upload_media_url_for_dwc_specimen', array( $this, 'upload_media_url_for_dwc_specimen' ) ); 	//3. processes associated media url
+
+    add_action( 'wp_ajax_delete_dwc_specimen', array( $this, 'delete_dwc_specimen' ) ); 									//4. processes specimen deletion
+    add_action( 'wp_ajax_nopriv_delete_dwc_specimen', array( $this, 'delete_dwc_specimen' ) ); 								//4. processes specimen deletion
+
+    add_action( 'wp_ajax_curate_specimen', array( $this, 'curate_specimen' ) );
+    add_action( 'wp_ajax_nopriv_curate_specimen', array( $this, 'curate_specimen' ) );
+
+		add_action('rest_api_init', array( $this, 'create_rest_routes' ) );
+		add_filter('dwc_class_descriptions', array( $this, 'dwc_class_descriptions' ) );
+		add_action('pre_get_posts', array($this, 'display_draft_single_posts') );
+		add_action('pre_get_posts', array($this, 'show_curation_archive') );
+
+		add_filter( 'get_the_excerpt', 'do_shortcode', 1);
+		add_action('init', array($this, 'dwc_add_shortcodes_to_excerpt' ) ); //trying to do shortcodes in search results
 	}
+
+	public function dwc_add_shortcodes_to_excerpt() {
+		//add_filter( 'get_the_excerpt', 'shortcode_unautop');
+    //add_filter('excerpt_length', array( $this, 'isacustom_excerpt_length') );
+		add_shortcode( 'dwc-post-content', array( $this, 'dwc_post_content_shortcode' ) );
+	}
+
+/*
+
+	function isacustom_excerpt_length($length) {
+    global $post;
+    if ($post->post_type == 'dwc-specimen')
+    	return 10000;
+		else
+			return $length;
+    }
+*/
+	public function dwc_post_content_shortcode( $atts, $content = '', $tag = '' ) {
+		/*
+		$specimen = new DarwinCoreSpecimen($atts['id']);
+		$result = '<table id="specimen-archive-list"><th>&nbsp;</th><th>Taxon</th><th>Location</th><th>Geological Context</th>
+			<tr class="hover-hand" data-href="'.get_post_type_archive_link(DarwinCoreSpecimen::POST_TYPE).$atts['id'].'/">
+				<td>'.darwin_core::specimen_featured_thumbnail( $atts['id'] ).'</td>
+				<td>'.$specimen->display_precise_meta( 'Taxon', 3 ).'</td>
+				<td>'.$specimen->display_precise_meta( 'Location', 2 ).'</td>
+				<td>'.$specimen->display_precise_meta( 'GeologicalContext', 3 ).'</td>
+			</tr>
+		</table>';
+		*/
+		$result = "testing";
+		return $result;
+	}
+
+	public function hide_admin_classes( $classes ) {
+		if (!current_user_can( 'administrator' ) && !current_user_can( 'dwc_curator' ) ) {
+			for ($count=1;$count<=count($classes);$count++) {
+				foreach ($classes[$count] as $key => $current) {
+					if ($current == 'RecordLevel')
+						unset($classes[$count][$key]);
+				}
+			}
+		}
+
+		return $classes;
+	}
+
+	//somehow this seems to be working even though it isn't hooked up to the add_action
+	public function ceo_single_page_published_and_draft_posts( $query ) {
+    if( is_single() && $query->get('post_type') == 'dwc_specimen') {
+      $query->set('post_status', 'publish,draft');
+    }
+	}
+
+	public function show_curation_archive( $query ) {
+    if( is_archive() && $query->get('post_type') == DarwinCoreSpecimen::POST_TYPE && $_GET['curate'] == 'true') {
+      $query->set('meta_query', array(
+        array(
+            'key'     => 'curated',
+            'value'   => 'true',
+            'compare' => '!=',
+        )));
+    }
+	}
+
+  public function darwin_core_scripts() {
+  	wp_enqueue_script( 'jquery' );
+  	wp_enqueue_style( 'darwin-core-css', plugins_url( '/style.css', __FILE__ ), array(), '1.456' );
+  	wp_enqueue_script( 'darwin-core-js', plugins_url( '/scripts.js', __FILE__ ), array(), '1.456'  );
+  	wp_enqueue_script( 'googlemaps', '//maps.googleapis.com/maps/api/js?key=AIzaSyCiawlM6d6FHKwLVNKP8eaO9eaug8DUSbk', array( 'jquery' ) );
+  	wp_enqueue_script( 'popup-overlay-js', '//cdn.rawgit.com/vast-engineering/jquery-popup-overlay/1.7.13/jquery.popupoverlay.js', array( 'jquery' ) );
+  }
+
+  public function darwin_core_localize_scripts() {
+  	$image_url = plugins_url( 'images/updating.gif', __FILE__ );
+    $localizations = array( 'loadingGifURL' => $image_url );
+
+    wp_localize_script( 'darwin-core-js', 'localizedVars', $localizations );
+  }
+
+  public function darwin_core_admin_scripts() {
+  	wp_enqueue_style( 'darwin-core-admin-css', plugins_url( '/admin-style.css', __FILE__ ) );
+  	wp_enqueue_script( 'jquery' );
+  	wp_enqueue_script( 'jquery-ui-core' );
+  	wp_enqueue_script( 'jquery-ui-sortable' );
+  	wp_enqueue_script( 'darwin-core-admin-js', plugins_url( '/admin-scripts.js', __FILE__ ), array(), '1.452' );
+  }
 
 	/** Public Methods *******************************************************/
 
-    public function register_custom_post_type() {
-        $labels = array(
-            'name'                => __( 'DwC Specimens', 'darwin-core' ),
-            'singular_name'       => __( 'DwC Specimen', 'darwin-core' ),
-            'menu_name'           => __( 'DwC Specimen', 'darwin-core' ),
-            'parent_item_colon'   => __( 'Parent DwC Specimen:', 'darwin-core' ),
-            'all_items'           => __( 'DwC Specimens', 'darwin-core' ),
-            'view_item'           => __( 'View DwC Specimen', 'darwin-core' ),
-            'add_new_item'        => __( 'Add New DwC Specimen', 'darwin-core' ),
-            'add_new'             => __( 'Add New', 'darwin-core' ),
-            'edit_item'           => __( 'Edit DwC Specimen', 'darwin-core' ),
-            'update_item'         => __( 'Update DwC Specimen', 'darwin-core' ),
-            'search_items'        => __( 'Search DwC Specimens', 'darwin-core' ),
-            'not_found'           => __( 'DwC Specimen not found', 'darwin-core' ),
-            'not_found_in_trash'  => __( 'DwC Specimen not found in Trash', 'darwin-core' ),
+	public function dwc_class_descriptions ($class) {
+		switch ($class) {
+			case 'Occurrence' :
+				$rval = "<div class='dwc-class-description'><p>When you collected this fossil you may have noted specific observations about the rock, location, or fossil. Please include any important information about how you encountered and/or collected the specimen. For example: 'Discovered laying on the sand of North Topsail beach during low tide,' or 'Found while sifting through gravel in Possum Creek.'</p></div>";
+				break;
+			case 'Taxon' :
+				$rval = "<div class='dwc-class-description'>
+				<p>Here is how to use basic Linnaean classification structure:</p>
+				<ol>
+				<li data-target='plus'><a>+</a> <span>Species Name</span>
+				<ol>
+				<li>Species name includes the generic assignment (genus name) and specific epithet - making it a two part, or binomial, name.</li>
+				<li>For example: <i>Canis familiaris</i>, where <i>Canis</i> is the generic assignment (genus name) and <i>familiaris</i> is the specific epithet, together they are the species name.</li><li>Only include <i>'familiaris'</i> in the specific epithet box.</li>
+				</ol>
+				<li>
+				<li>
+				<li data-target='plus'><a>+</a> <span>Author</span>
+				<ol>
+				<li>Here is where you can write the scientific author for the species or subspecies you have found.</li>
+				<li>This is not required information and it is okay to leave the field blank.</li>
+				</ol>
+				</li>
+				<li data-target='plus'><a>+</a> <span>Need Help?</span>
+				<ol>
+				<li>Click on the ‘Taxon Wizard’ button if you are unsure of how to begin. You will be prompted to enter in any level of scientific name you may know.</li>
+				<li>If you are unsure of the fossil's identification, head to our <a href='".get_site_url()."/groups/what-is-it/' target='_blank'>What is it? Group</a> or <a href='".get_site_url()."/forums/forum/3-what-is-it/' target='_blank'>What is it? Forum</a> to get help from the community.</li>
+				</ol>
+				</li>
+				</ol>
+				</div>";
+				break;
+			case 'Dimensions' :
+				$rval = "<div class='dwc-class-description'><ol><li data-target='plus'><a>+</a> <span>How to be considerate when taking measurements:</span><ol><li>The definitions of height, width, and length vary by the person taking the measurements.</li><li>If you choose to include dimensions make sure to include a comment or image that depicts or explains how you took the measurements.</li><li>It is best to always use the metric system; the default setting is centimeters in the upload screen.</li></ol></li></ol></div>";
+				break;
+			case 'Location' :
+				$rval = "<div class='dwc-class-description'><p>Where did you find the fossil?</p>
+				<ol>
+				<li data-target='plus'><a>+</a> <span>Try to be specific</span>
+				<ol>
+				<li>It is best to be as specific as possible, if you have latitude and longitude data please include it.</li>
+				<li>Sometimes that is not always possible or the fossil was collected a long time ago.</li>
+				</ol>
+				</li>
+				<li data-target='plus'><a>+</a> <span>DO NOT guess</span>
+				<ol>
+				<li>If you know a nearby city, input that and leave the latitude and longitude blank. Often other fossils have been found within the same area. This is particularly important for studies on how organisms were distributed around the world at different points in time.</li>
+				</ol>
+				</li>
+				<li data-target='plus'><a>+</a> <span>Need an example?</span>
+				<ol>
+				<li>Decimal degrees are used here to express latitude and longitude. For example, the coordinates of Gainesville, FL, USA in decimal degrees are 29.651630°, -82.32483°.</li>
+				</ol>
+				</li>
+				<li data-target='plus'><a>+</a> <span>Should you share your location?</span>
+				<ol>
+				<li>If you collected your fossil from private property or from a special collecting site, you do not have to share this information. You can either not include it on your upload or uncheck the 'Show location' check box.</li>
+				</ol>
+				</li>
+				</ol>
+				</div>";
+				break;
+			case 'GeologicalContext' :
+				$rval = "<div class='dwc-class-description'><p>Geochronology translates roughly to telling time with rocks.</p>
+				<ol>
+				<li data-target='plus'><a>+</a> <span>How do we use it?</span>
+				<ol>
+				<li>For a research grade specimen, it is best to get to the most specific unit of time possible (Age) to best know when in geologic time the organism lived.</li>
+				<li>This is particularly important when seeing when groups of organisms first appear and disappear in the fossil record, which helps us understand changes in biodiversity through time.</li>
+				<li>Geological maps can also help identify age and rocks type head to the <a href='https://www.usgs.gov/products/maps/geologic-maps' target='_blank'>United States Geological Survey</a> to learn more.</li>
+				<li>Apps can identify the age of the rock through the GPS in your phone <a href='https://itunes.apple.com/us/app/mancos/id541570878?mt=8' target='_blank'>'Mancos'</a> and <a href='https://rockd.org/' target='_blank'>'Rockd'</a>.</li>
+				</ol>
+				</li>
+				</ol>
+				</div>";
+				break;
+			case 'Lithostratigraphy' :
+				$rval = "<div class='dwc-class-description'>
+				<p>Lithostratigraphy is the study of rock layers.</p>
+				<ol>
+				<li data-target='plus'><a>+</a> <span>What should you include?</span>
+				<ol>
+				<li>The Group, Formation, and Member of the rock unit that you found your fossil in.</li>
+				<li>Include the Member if possible.</li>
+				<li>Apps can identify the rock through the GPS in your phone <a href='https://itunes.apple.com/us/app/mancos/id541570878?mt=8' target='_blank'>'Mancos'</a> and <a href='https://rockd.org/' target='_blank'>'Rockd'</a>.</li>
+				<li>These apps are particularly useful because they also describe what other fossils you should expect to find, a description of the rock, in some cases lat/long data, and much more.</li>
+				</div>";
+				break;
+		}
+		return $rval;
+	}
+
+	public function alter_darwin_core_json_meta_term ($term, $termName, $termValues) {
+		if ($termName == 'occurrenceID')
+			$term = null;
+
+		return $term;
+	}
+
+	public function alter_myfs_api_specimen_get_schema ($meta_keys) {
+		$occurrence_terms = $meta_keys["Occurrence"]["terms"];
+		unset($occurrence_terms['occurrenceID']);
+		$meta_keys['Occurrence']['terms'] = $occurrence_terms;
+		unset($meta_keys["RecordLevel"]);
+
+		return $meta_keys;
+	}
+
+	protected function guidv4() {
+    if (function_exists('com_create_guid') === true)
+        return trim(com_create_guid(), '{}');
+
+    $data = openssl_random_pseudo_bytes(16);
+    $data[6] = chr(ord($data[6]) & 0x0f | 0x40); // set version to 0100
+    $data[8] = chr(ord($data[8]) & 0x3f | 0x80); // set bits 6-7 to 10
+    return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($data), 4));
+	}
+
+	/**
+	 * Processes a Darwin Core Specimen being labeled as research grade
+	 *
+	 * @since 1.0.0
+	 */
+	public function curate_specimen() {
+		if ( !wp_verify_nonce( $_POST['curate_dwc_specimen_nonce'], 'curate_dwc_specimen' ) ) {
+			wp_send_json_error( new WP_Error( 'research_grade_dwc_specimen_nonce_error', __( "Shenanigans are afoot. Bailing..." ) ), 401 );
+		}
+
+		$post = get_post( $_POST['dwc_specimen_id'] );
+
+		if ( $post->post_type !== 'dwc_specimen') {
+  		wp_send_json_error( new WP_Error( 'curate_dwc_specimen_post_type_error', __( "That isn't a Darwin Core Specimen..." ) ), 400 );
+  	}
+
+		if ( $post->post_author != get_current_user_id() && !current_user_can( 'administrator' ) && !current_user_can( 'dwc_curator' ) ) {
+  		wp_send_json_error( new WP_Error( 'curate_dwc_specimen_permission_error', __( "You don't have permission to play with that..." ) ), 401 );
+  	}
+		$meta = get_post_meta( $post->ID );
+
+		if ($_POST['grade'] == 'downgrade') {
+			$specimen = new DarwinCoreSpecimen($post->ID);
+			$content = "";
+
+			//disassociate image attachments from their ac-media
+			$media = $specimen->get_image_assets();
+			foreach ( $media as $current ) {
+				$args = array(
+					'post_parent' => $current,
+					'post_type' => 'attachment'
+				);
+				$children = get_children($args);
+
+				$child = array_pop($children);
+				$attachments[] = $child->ID;
+				$description = get_post_meta( $current, "description", true );
+				$content .= empty($description) ? "" : "<p>".$description."</p>";
+
+				$child_update = array(
+            'ID'            => $child->ID,
+            'post_parent'   => 0
         );
 
-        $args = array(
-            'label'               => __( DarwinCoreSpecimen::POST_TYPE, 'darwin-core' ),
-            'description'         => __( 'Represents a Darwin Core Specimen', 'darwin-core' ),
-            'labels'              => $labels,
-            'supports'            => array( 'title', 'editor', 'author', 'thumbnail', 'custom-fields', 'comments', 'post-formats' ),
-            'hierarchical'        => false,
-            'public'              => true,
-            'show_ui'             => true,
-            'show_in_menu'        => true,
-            'show_in_rest'		  => true,
-            'menu_position'       => 27,
-            'can_export'          => true,
-            'has_archive'         => true,
-            'rewrite'             => array(
-                'slug' => 'dwc-specimen',
-                'with_front' => false,
-                'feed' => true,
-                'pages' => true
-            ),
-            'exclude_from_search' => true,
-            'publicly_queryable'  => true,
-            'capability_type'     => 'post',
-            'menu_icon'           => 'dashicons-media-document'
-        );
+				$rval['images'][] = $child->ID;
+				wp_update_post( $child_update );
+				wp_delete_post( $current );
+			}
 
-        register_post_type( DarwinCoreSpecimen::POST_TYPE, $args );
-    }
+			global $bp;
+			global $activities_template;
+			//get buddypress post
+			$activity_args = array(
+				"page" => 1,
+				"per_page" => 1,
+				"filter_query" => array(
+					array(
+						'column' => 'secondary_item_id',
+						'value' => $post->ID,
+						'compare' => '='
+					)
+				)
+			);
+
+			//edit buddypress post to be app_image_update
+			if ( bp_has_activities( $activity_args ) ) {
+				foreach ( $activities_template->activities as $activity ) {
+					$user_id = $post->post_author;
+					$user_link = bp_core_get_user_domain( $user_id );
+					$username =  bp_core_get_user_displayname( $user_id );
+
+					$bp_args['id'] = $activity->id;
+					$bp_args['user_id'] = $user_id;
+					$bp_args['type'] = "app_image_update";
+					$bp_args['secondary_item_id'] = 0;
+					$bp_args['recorded_time'] = $activity->date_recorded;
+
+					if ($activity->component == 'groups') {
+						$group_id = $activity->item_id;
+						$group = groups_get_group( array( 'group_id' => $group_id ) );
+						$group_link = home_url( $bp->groups->slug . '/' . $group->slug );
+						$group_name = $group->name;
+						$bp_args['item_id'] = $group_id;
+						$bp_args['component'] = "groups";
+						$bp_args['action'] = "<a href='{$user_link}'>{$username}</a> posted an image in the group <a href='{$group_link}'>{$group->name}</a> from the myFOSSIL app";
+						$bp_args['content'] = $content . "\n[myfs-app-image id='".implode(',',$attachments)."']"; //make sure this shortcode can handle multiple images
+
+					} else {
+						$bp_args['component'] = "activity";
+						$bp_args['action'] = "<a href='{$user_link}'>{$username}</a> posted an image.";
+						$bp_args['content'] = $content . "\n[myfs-app-image id='".implode(',',$attachments)."']"; //make sure this shortcode can handle multiple images
+					}
+
+					bp_activity_add($bp_args);
+					$rval['bp'] = $bp_args;
+				}
+			}
+
+			//purge dwc-specimen, ac-media, and all of their associated meta
+			wp_delete_post( $post->ID );
+			$rval['grade'] = $_POST['grade'];
+			wp_send_json_success( $rval , 200 );
+			die();
+		}
+
+		if ($_POST['grade'] == 'research') {
+			foreach ($meta as $key => $value)
+				$clean_meta[$key] = $value[0];
+			$clean_meta['Occurrence_occurrenceID'] = $this->guidv4();
+			$specimen = new DarwinCoreSpecimen($post->ID);
+			$specimen->save( $clean_meta );
+		}
+		$curation_count = empty($meta['curation_count'][0]) ? 0 : $meta['curation_count'][0];
+
+		$curation_count++;
+
+		update_post_meta( $_POST['dwc_specimen_id'], 'curation_count', $curation_count );
+		update_post_meta( $_POST['dwc_specimen_id'], 'grade', $_POST['grade'] );
+		update_post_meta( $_POST['dwc_specimen_id'], 'curated', 'true' );
+
+		$rval = array( "OccurenceID" => $clean_meta['Occurrence_occurrenceID'], "grade" => $_POST['grade']);
+		wp_send_json_success( $rval , 200 );
+	}
+
+	/**
+	 * Processes the update of a Darwin Core specimen
+	 *
+	 * @since 1.0.0
+	 */
+	public function dwc_specimen_upload_terms() {
+		$rval = new stdClass();
+		$rval->hascontent = array();
+		$val->terms = array();
+		$val->values = array();
+
+		if ( !wp_verify_nonce( $_POST['dwc_specimen_upload_terms_nonce'], 'dwc_specimen_upload_terms' ) ) {
+			wp_send_json_error( new WP_Error( 'dwc_specimen_upload_terms_nonce_error', __( "Shenanigans are afoot. Bailing on update..." ) ), 401 );
+		}
+
+		$rval->id = ( empty( $_POST['dwc_specimen_id'] ) ) ? self::create_dwc_specimen( 'draft' ) : $_POST['dwc_specimen_id'];
+
+		$post = get_post( $rval->id );
+
+		if ( $post->post_type !== 'dwc_specimen') {
+  		wp_send_json_error( new WP_Error( 'dwc_specimen_upload_terms_post_type_error', __( "That isn't a Darwin Core Specimen..." ) ), 400 );
+  	}
+
+		if ( $post->post_author != get_current_user_id() && !current_user_can( 'administrator' ) && !current_user_can( 'dwc_curator' ) ) {
+  		wp_send_json_error( new WP_Error( 'dwc_specimen_upload_terms_permission_error', __( "You don't have permission to play with that..." ) ), 401 );
+  	}
+
+    $specimen = new DarwinCoreSpecimen( $post->ID );
+    $specimen->save($_POST);
+
+		$class_and_terms = $specimen->get_meta_keys();
+
+		foreach ($class_and_terms as $className => $classSettings) {
+			foreach($classSettings['terms'] as $termName => $termSettings) {
+				$key_name = $className.'_'.$termName;
+				$rval->terms[] = $key_name;
+				if (!empty($_POST[$key_name])) {
+					$rval->values[] = $_POST[$key_name];
+					if (!in_array($className, $rval->hascontent))
+						$rval->hascontent[] = $className;
+				} else {
+					$rval->values[] = "UNKNOWN";
+				}
+			}
+		}
+
+		$rval->author_name = bp_core_get_user_displayname( $post->post_author );
+		$rval->last_updated = get_post_modified_time('m-d-Y H:i', false, $rval->id);
+
+		if (get_post_status( $rval->id ) == 'publish') {
+			$specimen = new DarwinCoreSpecimen($rval->id);
+			$specimen->bp_group_activity_update();
+		}
+		wp_send_json_success( $rval , 200 );
+	}
+
+	/**
+	 * Processes the upload of Darwin Core associated media from the creation wizard
+	 *
+	 * @since 1.0.0
+	 *
+	 * @todo create handling of associated media when audubon core is not installed
+	 */
+	public function dwc_specimen_upload_media() {
+		$rval = new stdClass();
+
+		if ( !wp_verify_nonce( $_POST['dwc_specimen_upload_media_nonce'], 'dwc_specimen_upload_media' ) ) {
+			wp_send_json_error( new WP_Error( 'dwc_specimen_upload_media_nonce_error', __( "Shenanigans are afoot. Bailing on upload..." ) ), 401 );
+		}
+
+		if ($_FILES['dwc_media_file']['error'] !== UPLOAD_ERR_OK) {
+			wp_send_json_error( new WP_Error( 'dwc_specimen_upload_media_file_error', __( "There was a problem with the selected file." ) ), 400 );
+		}
+
+		if ( !current_user_can( 'author' ) && !current_user_can( 'administrator' ) && !current_user_can( 'dwc_curator' ) ) {
+    		wp_send_json_error( new WP_Error( 'dwc_specimen_upload_media_permission_error', __( "You don't have permission to play with that..." ) ), 401 );
+    	}
+
+		$rval->id = ( empty( $_POST['dwc_specimen_id'] ) ) ? self::create_dwc_specimen( 'draft' ) : $_POST['dwc_specimen_id'];
+
+		$post = get_post( $rval->id );
+
+		if ( $post->post_type !== 'dwc_specimen') {
+    		wp_send_json_error( new WP_Error( 'dwc_specimen_upload_media_post_type_error', __( "That isn't a Darwin Core Specimen..." ) ), 400 );
+    	}
+
+		if ( $post->post_author != get_current_user_id() && !current_user_can( 'administrator' ) && !current_user_can( 'dwc_curator' ) ) {
+    		wp_send_json_error( new WP_Error( 'dwc_specimen_upload_media_permission_error', __( "You don't have permission to play with that..." ) ), 401 );
+    	}
+
+  	if ( class_exists( 'audubon_core' ) ) {
+  		$ac_id = audubon_core::instance()->process_media_upload( 'dwc_media_file', $rval->id );
+
+  		if ( !$ac_id )
+				wp_send_json_error( new WP_Error( 'upload_media_for_dwc_specimen_file_error', __( "There was a problem with the selected file, but a specimen was created." ) ), 400 );
+  	}
+
+		$img_args = array(
+			'post_parent' => $ac_id,
+			'post_type' => 'attachment'
+		);
+		$media = array_shift( get_children($img_args) );
+		if ( !is_null( $media ) ) {
+			$rval->thumb_src = wp_get_attachment_image_src( $media->ID, 'thumbnail', false);
+			$is_published = array(
+          'ID'            => $rval->id,
+          'post_status'   => "publish"
+      );
+			wp_update_post( $is_published );
+		}
+
+		$rval->author_name = bp_core_get_user_displayname( $post->post_author );
+		$rval->last_updated = get_post_modified_time('m-d-Y H:i', false, $rval->id);
+
+		if (get_post_status( $rval->id ) == 'publish') {
+			$specimen = new DarwinCoreSpecimen($rval->id);
+			$specimen->bp_group_activity_update();
+		}
+
+		wp_send_json_success( $rval , 201 );
+	}
+
+	public function ingest_myfossil_specimens() {
+		$ch = curl_init();
+
+		// set url
+		curl_setopt($ch, CURLOPT_URL, "http://paleobiodb.org/data1.1/intervals/list.json?scale=1&vocab=pbdb");
+
+		//return the transfer as a string
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+
+		// $output contains the output string
+		$output = curl_exec($ch);
+
+		$pbdb_obj = json_decode($output);
+		$records = $pbdb_obj->records;
+		curl_close($ch);
+
+		$equivalence = array(
+		  "country" => "Location_country",
+		  "state" => "Location_stateProvince",
+		  "county" => "Location_county",
+		  "city" => "Location_locality",
+		  "latitude" => "Location_decimalLatitude",
+		  "longitude" => "Location_decimalLongitude",
+		  "not_disclosed" => "Location_disclosed",
+		  "eon" => "GeologicalContext_earliestEonOrLowestEonothem",
+		  "era" => "GeologicalContext_earliestEraOrLowestErathem",
+		  "period" => "GeologicalContext_earliestPeriodOrLowestSystem",
+		  "epoch" => "GeologicalContext_earliestEpochOrLowestSeries",
+		  "age" => "GeologicalContext_earliestAgeOrLowestStage",
+		  "group" => "GeologicalContext_group",
+		  "formation" => "GeologicalContext_formation",
+		  "member" => "GeologicalContext_member",
+		  "common" => "Taxon_vernacularName",
+		  "kingdom" => "Taxon_kingdom",
+		  "phylum" => "Taxon_phylum",
+		  "class" => "Taxon_class",
+		  "order" => "Taxon_order",
+		  "family" => "Taxon_family",
+		  "genus" => "Taxon_genus",
+		  "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx1" => "Taxon_subgenus",
+		  "species" => "Taxon_specificEpithet",
+		  "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx2" => "Taxon_infraspecificEpithet",
+		  "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx3" => "Taxon_scientificNameAuthorship",
+		  "length" => "Dimensions_length",
+		  "width" => "Dimensions_width",
+		  "height" => "Dimensions_height"
+		);
+		$response = array();
+		$paged = 1;
+
+		$fossil_query_args = array(
+		  'post_type' => myFOSSIL\Plugin\Specimen\Fossil::POST_TYPE,
+		  'posts_per_page' => 100,
+			'paged' => $paged,
+		  'post_status' => array('publish','draft')
+		);
+
+
+		global $post;
+		$fossils = new WP_Query( $fossil_query_args );
+		if ( $fossils->have_posts() ) {
+		  while ( $fossils->have_posts() ) {
+				$fossils->the_post();
+				$fossil_id = get_the_ID();
+				$author_id = get_the_author_meta( 'ID' );
+				$post_status = get_post_status( $fossil_id );
+				$fossil = new myFOSSIL\Plugin\Specimen\Fossil( $fossil_id );
+
+		    $entry = new stdClass();
+		    $entry->values = array();
+		    $entry->images = array();
+				$entry->author_id = $author_id;
+				$entry->post_status = $post_status;
+
+		    foreach ( myFOSSIL\Plugin\Specimen\FossilTaxa::get_ranks() as $k ) {
+		      $new_taxon = $equivalence[$k];
+		      $entry->values[$new_taxon] = $fossil->taxa->{ $k }->name;
+		    }
+		    foreach ( array( 'length', 'width', 'height' ) as $k ) {
+		      $new_dimen = $equivalence[$k];
+		      $entry->values[$new_dimen] = $fossil->dimension->{ $k } * 100;
+		    }
+		    foreach ( array( 'city', 'state', 'county', 'country', 'latitude', 'longitude', 'not_disclosed' ) as $k ) {
+		    $new_location = $equivalence[$k];
+		      if ($k === 'not_disclosed') {
+		        if ($fossil->location->{ $k } == "true")
+		          $entry->values[$new_location] = "false";
+		        else
+		          $entry->values[$new_location] = "true";
+		      } else {
+		        $entry->values[$new_location] = $fossil->location->{ $k };
+		      }
+		    }
+
+		    $scales = array(
+		      "1" => 'eon',
+		      "2" => 'era',
+		      "3" => 'period',
+		      "4" => 'epoch',
+		      "5" => 'age'
+		    );
+
+		    $intervals = array();
+		    $match = false;
+
+		    foreach ($records as $interval) {
+		      $intervals[$interval->interval_no] = $interval;
+		      if ($fossil->time_interval->name === $interval->interval_name) {
+		          $match = $interval->interval_no;
+		      }
+		    }
+
+
+		    //Populate parents of the time interval
+
+		    $current_interval = $match ? $intervals[$match] : null;
+		    while ($current_interval) {
+		        $new_geochron = $equivalence[$scales[$current_interval->level]];
+		        $entry->values[$new_geochron] = $current_interval->interval_name;
+		        $current_interval = $intervals[$current_interval->parent_no];
+		    }
+
+		    foreach ( myFOSSIL\Plugin\Specimen\Stratum::get_ranks() as $n => $k ) {
+		      $new_litho = $equivalence[$k];
+		      $entry->values[$new_litho] = $fossil->strata->{ $k }->name;
+		    }
+
+		    $images = get_attached_media( 'image', $fossil->id );
+
+		    if ( ! is_array( $images ) ) {
+		        $images = array( $images );
+		    }
+		    foreach ( $images as $image ) {
+		      $entry->images[] = $image->ID;
+		    }
+
+				//CREATE THE NEW DARWIN CORE AND AUDUBON CORE ENTRIES AND ASSOCIATE THE IMAGES WITH THEM
+
+			 	$post_status = (count($entry->images) > 0) ? 'publish' : 'draft';
+
+		    $specimen_id = self::create_dwc_specimen( $post_status );
+		    $entry->specimen_id = $specimen_id;
+
+		    wp_update_post(
+					array(
+						'ID' => $specimen_id,
+						'post_parent' => $fossil_id,
+						'post_author' => $author_id,
+						'post_date' => $post->post_date,
+						'post_date_gmt' => $post->post_date_gmt));
+
+		    $new_specimen = new DarwinCoreSpecimen( $specimen_id );
+		    $new_specimen->save($entry->values);
+
+		    foreach ($entry->images as $current_image_id) {
+		      $audubon_id = audubon_core::create_ac_media( $specimen_id );
+		      wp_update_post(array('ID' => $audubon_id,'post_author' => $author_id));
+
+		      $image_src = wp_get_attachment_url( $current_image_id );
+		      preg_match( "#\.([A-Za-z]+)$#", $image_src, $matches );
+		      $entry->resource_ext[$current_image_id] = strtolower($matches[1]);
+		      $entry->resource_url[$current_image_id] = preg_replace('#^https?:#', '', $image_src );
+		  		update_post_meta( $audubon_id, 'resource_ext', strtolower($matches[1]) );
+		  		update_post_meta( $audubon_id, 'resource_url', preg_replace('#^https?:#', '', $image_src ) );
+		      wp_update_post(array('ID' => $current_image_id,'post_parent' => $audubon_id));
+		    }
+
+		    $response[$paged.'_'.get_the_ID()] = $entry;
+		  }
+		  // Restore original Post Data
+		  wp_reset_postdata();
+		} else {
+		  // no posts found
+		}
+
+		echo json_encode($response);
+		die();
+	}
+
+	public function publish_image_specimens() {
+		global $post;
+		$rval = array();
+
+		//Any DwC Drafts that have images should now be Published
+		$specimen_query_args = array(
+		  'post_type' => DarwinCoreSpecimen::POST_TYPE,
+		  'posts_per_page' => -1,
+		  'post_status' => array('draft')
+		);
+
+		$draft_specimens = new WP_Query( $specimen_query_args );
+		if ( $draft_specimens->have_posts() ) {
+		  while ( $draft_specimens->have_posts() ) {
+				$draft_specimens->the_post();
+				$obj = new DarwinCoreSpecimen(get_the_ID());
+
+				//if image attached switch to publish
+				if ( !empty( $obj->get_image_assets() ) ) {
+					$rval['publishing'][] = get_the_ID();
+
+					$dwc_update = array(
+	            'ID'           => get_the_ID(),
+							'post_status'  => 'publish'
+	        );
+	        wp_update_post( $dwc_update );
+				}
+			}
+		}
+
+		wp_send_json_success( $rval , 201 );
+	}
+
+	public function create_historic_bp_activity() {
+		global $post;
+		$rval = array();
+		$bp_ids = array();
+
+		//get all bp activities dwc_specimen_create
+		$activity_args = array(
+			"per_page" => 0,
+			"filter_query" => array(
+				array(
+					'column' => 'type',
+					'value' => 'dwc_specimen_created',
+					'compare' => '='
+				)
+			)
+		);
+		$activity = BP_Activity_Activity::get( $activity_args );
+
+		foreach ($activity['activities'] as $current) {
+			$bp_ids[] = $current->secondary_item_id;
+		}
+
+		//get all darwin-core publish posts
+		$specimen_query_args = array(
+		  'post_type' => DarwinCoreSpecimen::POST_TYPE,
+		  'posts_per_page' => 500,
+			'paged' => 5,
+		  'post_status' => array('publish')
+		);
+
+		$publish_specimens = new WP_Query( $specimen_query_args );
+		if ( $publish_specimens->have_posts() ) {
+		  while ( $publish_specimens->have_posts() ) {
+				$publish_specimens->the_post();
+				$obj = new DarwinCoreSpecimen(get_the_ID());
+
+				//if no bp activity, create one
+				if (!in_array(get_the_ID(), $bp_ids ) ) {
+					$rval['activity_added'][] = get_the_ID();
+					$obj->bp_group_activity_update_historic(0, $post->post_date_gmt, get_the_author_meta( 'ID' ));
+				}
+			}
+		}
+
+		wp_send_json_success( $rval , 201 );
+	}
+
+	public function set_specimen_post_content() {
+		global $post;
+		$rval = array();
+		$specimen_query_args = array(
+			'post_type' => DarwinCoreSpecimen::POST_TYPE,
+			'posts_per_page' => 500,
+			'paged' => 5,
+			'post_status' => array('publish')
+		);
+
+		$publish_specimens = new WP_Query( $specimen_query_args );
+		if ( $publish_specimens->have_posts() ) {
+		  while ( $publish_specimens->have_posts() ) {
+				$publish_specimens->the_post();
+				$obj = new DarwinCoreSpecimen(get_the_ID());
+				$content = $obj->create_content_text();
+				$rval['update_content'][] = get_the_ID().":".$content;
+
+				$dwc_update = array(
+						'ID'       => get_the_ID(),
+						'post_content'  => $content
+				);
+				wp_update_post( $dwc_update );
+			}
+		}
+
+		wp_send_json_success( $rval , 201 );
+	}
+
+	/**
+	 * Register the routes for all of the controllers
+	 */
+	public function create_rest_routes() {
+		// Activities.
+		$controller = new DWC_REST_Ingestion_Controller;
+		$controller->register_routes();
+		$user_controller = new DWC_REST_User_Controller;
+		$user_controller->register_routes();
+	}
+
+  public function register_custom_post_type() {
+    $labels = array(
+      'name'                => __( 'DwC Specimens', 'darwin-core' ),
+      'singular_name'       => __( 'DwC Specimen', 'darwin-core' ),
+      'menu_name'           => __( 'DwC Specimen', 'darwin-core' ),
+      'parent_item_colon'   => __( 'Parent DwC Specimen:', 'darwin-core' ),
+      'all_items'           => __( 'DwC Specimens', 'darwin-core' ),
+      'view_item'           => __( 'View DwC Specimen', 'darwin-core' ),
+      'add_new_item'        => __( 'Add New DwC Specimen', 'darwin-core' ),
+      'add_new'             => __( 'Add New', 'darwin-core' ),
+      'edit_item'           => __( 'Edit DwC Specimen', 'darwin-core' ),
+      'update_item'         => __( 'Update DwC Specimen', 'darwin-core' ),
+      'search_items'        => __( 'Search DwC Specimens', 'darwin-core' ),
+      'not_found'           => __( 'DwC Specimen not found', 'darwin-core' ),
+      'not_found_in_trash'  => __( 'DwC Specimen not found in Trash', 'darwin-core' ),
+    );
+
+    $args = array(
+      'label'               => __( DarwinCoreSpecimen::POST_TYPE, 'darwin-core' ),
+      'description'         => __( 'Represents a Darwin Core Specimen', 'darwin-core' ),
+      'labels'              => $labels,
+      'supports'            => array( 'title', 'editor', 'author', 'thumbnail', 'custom-fields', 'comments', 'post-formats' ),
+      'hierarchical'        => false,
+      'public'              => true,
+      'show_ui'             => true,
+      'show_in_menu'        => true,
+      'show_in_rest'		  	=> true,
+      'menu_position'       => 27,
+      'can_export'          => true,
+      'has_archive'         => true,
+      'rewrite'             => array(
+        'slug' => 'dwc-specimen',
+        'with_front' => false,
+        'feed' => true,
+        'pages' => true
+      ),
+      'exclude_from_search' => false,
+      'publicly_queryable'  => true,
+      'capability_type'     => 'post',
+      'menu_icon'           => 'dashicons-media-document'
+    );
+
+    register_post_type( DarwinCoreSpecimen::POST_TYPE, $args );
+  }
 
 	function darwin_core_single_templates($single) {
-	    global $wp_query, $post;
+    global $wp_query, $post;
 
-	    /* Checks for single template by post type */
-	    if ($post->post_type == DarwinCoreSpecimen::POST_TYPE) {
-	        if( file_exists(plugin_dir_path( __FILE__ ) . 'templates/single-dwc-specimen.php') ) {
-	            return plugin_dir_path( __FILE__ ) . 'templates/single-dwc-specimen.php';
-	        }
-	    }
-	    return $single;
+    /* Checks for single template by post type */
+    if ($post->post_type == DarwinCoreSpecimen::POST_TYPE) {
+      if( file_exists(plugin_dir_path( __FILE__ ) . 'templates/single-dwc-specimen.php') ) {
+        return plugin_dir_path( __FILE__ ) . 'templates/single-dwc-specimen.php';
+      }
+    }
+    return $single;
 	}
 
 
 	function darwin_core_archive_templates($archive) {
 	    global $wp_query, $post;
 
-	    /* Checks for single template by post type */
+	    /* Checks for archive template by post type */
 	    if ($wp_query->query_vars['post_type'] == DarwinCoreSpecimen::POST_TYPE) {
 	        if( file_exists(plugin_dir_path( __FILE__ ) . 'templates/archive-dwc-specimen.php') ) {
 	            return plugin_dir_path( __FILE__ ) . 'templates/archive-dwc-specimen.php';
 	        }
 	    }
+
 	    return $archive;
 	}
 
@@ -224,10 +998,18 @@ final class darwin_core {
 	        if( file_exists(plugin_dir_path( __FILE__ ) . 'templates/darwin-core-wizard.php') ) {
 	            return plugin_dir_path( __FILE__ ) . 'templates/darwin-core-wizard.php';
 	        }
+	    } elseif ($wp_query->query_vars['pagename'] == 'create-specimen') {
+	        if( file_exists(plugin_dir_path( __FILE__ ) . 'templates/create-specimen.php') ) {
+	            return plugin_dir_path( __FILE__ ) . 'templates/create-specimen.php';
+	        }
+	    } elseif ($wp_query->query_vars['pagename'] == 'dwc-exhibits') {
+	        if( file_exists(plugin_dir_path( __FILE__ ) . 'templates/dwc-exhibits.php') ) {
+	            return plugin_dir_path( __FILE__ ) . 'templates/dwc-exhibits.php';
+	        }
 	    }
 	    return $archive;
 	}
-	
+
 	/**
 	 * Displays the featured image thumbnail
 	 *
@@ -235,7 +1017,9 @@ final class darwin_core {
 	 *
 	 * @param int $id
 	 */
-	public function specimen_featured_thumbnail( $id ) { 
+	public function specimen_featured_thumbnail( $id ) {
+		$displayed = false;
+
 		$ac_args = array(
 			'post_parent' => $id,
 			'post_type' => 'ac_media'
@@ -243,14 +1027,10 @@ final class darwin_core {
 		$children = get_children($ac_args);
 
 		if ( count( $children ) > 0 ) {
-			$displayed = false;
-
-			while ( !$displayed ) {
+			while ( !$displayed && count( $children ) > 0 ) {
 				$child = array_shift( $children );
 
-				if ( $child == null ) {
-					//display some blank image
-				} else {
+				if ( $child != null ) {
 					$img_args = array(
 						'post_parent' => $child->ID,
 						'post_type' => 'attachment'
@@ -258,14 +1038,20 @@ final class darwin_core {
 					$attachments = get_children($img_args);
 					$media = array_shift( $attachments );
 					if ( !is_null( $media ) ) {
-						echo wp_get_attachment_image( $media->ID, 'thumbnail', false, array('class'=>'dwc-gallery-thumb wp-image-'.$media->ID) );
-						$displayed = true;
+						$thumb = wp_get_attachment_image( $media->ID, 'thumbnail', false, array('class'=>'dwc-gallery-thumb wp-image-'.$media->ID) );
+						if ( !empty( $thumb ) ) {
+							echo $thumb;
+							$displayed = true;
+						}
 					}
 				}
 			}
 		}
+
+		if (!$displayed)
+			echo '<img src="/wp-content/uploads/2017/06/stl-no-thumb.png" class="dwc-gallery-thumb" />';
 	}
-	
+
 	/**
 	 * Creates a Darwin Core Specimen post
 	 *
@@ -275,14 +1061,14 @@ final class darwin_core {
 	 *
 	 * @return int|WP_Error Post ID on success, WP_Error on failure
 	 */
-	public function create_dwc_specimen( $post_status ) { 
+	public function create_dwc_specimen( $post_status ) {
 		$args = array(
-	        'post_title' => '',
-	        'post_status' => $post_status,
-	        'post_type' => DarwinCoreSpecimen::POST_TYPE
-	    );
+      'post_title' => '',
+      'post_status' => $post_status,
+      'post_type' => DarwinCoreSpecimen::POST_TYPE
+    );
 
-	    $id = wp_insert_post( $args );
+    $id = wp_insert_post( $args );
 
 
 		$update_args = array(
@@ -311,16 +1097,16 @@ final class darwin_core {
 		$post = get_post( $_POST['dwc_specimen_id'] );
 
 		if ( $post->post_type !== 'dwc_specimen') {
-    		wp_send_json_error( new WP_Error( 'delete_dwc_specimen_post_type_error', __( "That isn't a Darwin Core Specimen..." ) ), 400 );
-    	}
+  		wp_send_json_error( new WP_Error( 'delete_dwc_specimen_post_type_error', __( "That isn't a Darwin Core Specimen..." ) ), 400 );
+  	}
 
-		if ( $post->post_author != get_current_user_id() && !current_user_can( 'administrator' ) ) {
-    		wp_send_json_error( new WP_Error( 'delete_dwc_specimen_permission_error', __( "You don't have permission to play with that..." ) ), 401 );
-    	}
+		if ( $post->post_author != get_current_user_id() && !current_user_can( 'administrator' ) && !current_user_can( 'dwc_curator' ) ) {
+  		wp_send_json_error( new WP_Error( 'delete_dwc_specimen_permission_error', __( "You don't have permission to play with that..." ) ), 401 );
+  	}
 
-    	$condemned = $post->ID;
+  	$condemned = $post->ID;
 
-    	$children_args = array(
+  	$children_args = array(
 			'post_parent' => $condemned,
 			'post_type' => 'ac_media'
 		);
@@ -344,7 +1130,7 @@ final class darwin_core {
 
 			wp_delete_post( $child->ID, true  );
 		}
-		
+
 		wp_delete_post( $condemned, true );
 
 /*
@@ -356,7 +1142,7 @@ final class darwin_core {
 					'post_type' => 'ac_media'
 				);
 				$children = get_children( $args );
-				
+
 				foreach ($children as $child) {
 					$update_args = array(
 			            'ID'            => $child->ID,
@@ -390,25 +1176,25 @@ final class darwin_core {
     		wp_send_json_error( new WP_Error( 'update_dwc_specimen_post_type_error', __( "That isn't a Darwin Core Specimen..." ) ), 400 );
     	}
 
-		if ( $post->post_author != get_current_user_id() && !current_user_can( 'administrator' ) ) {
+		if ( $post->post_author != get_current_user_id() && !current_user_can( 'administrator' ) && !current_user_can( 'dwc_curator' ) ) {
     		wp_send_json_error( new WP_Error( 'update_dwc_specimen_permission_error', __( "You don't have permission to play with that..." ) ), 401 );
     	}
 
 		$dwc_title = empty($_POST['post_title'] ) ? 'Specimen '.$post->ID : $_POST['post_title'];
-	    
+
 		$args = array(
 			'ID'           	=> $post->ID,
 			'post_title'   	=> $dwc_title,
 			'post_name'		=> $post->ID
 		);
 		wp_update_post( $args);
-		
+
         $specimen = new DarwinCoreSpecimen( $post->ID );
         $specimen->save($_POST);
 
 		wp_send_json_success( $post->ID , 200 );
 	}
-	
+
 	/**
 	 * Processes the upload of Darwin Core associated media
 	 *
@@ -426,7 +1212,7 @@ final class darwin_core {
 			wp_send_json_error( new WP_Error( 'upload_media_for_dwc_specimen_file_error', __( "There was a problem with the selected file." ) ), 400 );
 		}
 
-		if ( !current_user_can( 'author' ) && !current_user_can( 'administrator' ) ) {
+		if ( !current_user_can( 'author' ) && !current_user_can( 'administrator' ) && !current_user_can( 'dwc_curator' ) ) {
     		wp_send_json_error( new WP_Error( 'upload_media_for_dwc_specimen_permission_error', __( "You don't have permission to play with that..." ) ), 401 );
     	}
 
@@ -438,7 +1224,7 @@ final class darwin_core {
     		wp_send_json_error( new WP_Error( 'upload_media_for_dwc_specimen_post_type_error', __( "That isn't a Darwin Core Specimen..." ) ), 400 );
     	}
 
-		if ( $post->post_author != get_current_user_id() && !current_user_can( 'administrator' ) ) {
+		if ( $post->post_author != get_current_user_id() && !current_user_can( 'administrator' ) && !current_user_can( 'dwc_curator' ) ) {
     		wp_send_json_error( new WP_Error( 'upload_media_for_dwc_specimen_permission_error', __( "You don't have permission to play with that..." ) ), 401 );
     	}
 
@@ -453,7 +1239,7 @@ final class darwin_core {
 
 		wp_send_json_success( $id , 201 );
 	}
-	
+
 	/**
 	 * Processes the upload of Darwin Core associated media URL
 	 *
@@ -471,7 +1257,7 @@ final class darwin_core {
 			wp_send_json_error(new WP_Error( 'upload_media_url_for_dwc_specimen_malformed_url_error', __( "There is something wrong with your URL..." ) ), 400 );
 		}
 
-		if ( !current_user_can( 'author' ) && !current_user_can( 'administrator' ) ) {
+		if ( !current_user_can( 'author' ) && !current_user_can( 'administrator' ) && !current_user_can( 'dwc_curator' ) ) {
     		wp_send_json_error( new WP_Error( 'upload_media_url_for_dwc_specimen_permission_error', __( "You don't have permission to play with that..." ) ), 401 );
     	}
 
@@ -483,7 +1269,7 @@ final class darwin_core {
     		wp_send_json_error( new WP_Error( 'upload_media_for_dwc_specimen_post_type_error', __( "That isn't a Darwin Core Specimen..." ) ), 400 );
     	}
 
-		if ( $post->post_author != get_current_user_id() && !current_user_can( 'administrator' ) ) {
+		if ( $post->post_author != get_current_user_id() && !current_user_can( 'administrator' ) && !current_user_can( 'dwc_curator' ) ) {
     		wp_send_json_error( new WP_Error( 'upload_media_for_dwc_specimen_permission_error', __( "You don't have permission to play with that..." ) ), 401 );
     	}
 
@@ -495,92 +1281,99 @@ final class darwin_core {
     	}
 
     	//create handling of associated media url when audubon core is not installed, this runs regardless of audubon being installed because this needs to continue working if that plugin is removed
-    	
+
 		wp_send_json_success( $id , 201 );
 	}
 
     //all of these should be broken out to my functions.php because I don't think they will be part of Darwin Core core
-	public function term_group_add_html( $html ) {
-		$html .= '';
-	    return $html;
+	public function term_occurrenceID_edit_html( $html, $type, $key, $displayName, $value, $user_access, $summary ) {
+		if ($key == 'Occurrence_occurrenceID' && !current_user_can('administrator') && !current_user_can( 'dwc_curator' ))
+			$html = '';
+
+		if ($key == 'Location_disclosed' && $user_access == 'guest')
+			$html = '';
+
+		if ($key == 'GeologicalContext_group')
+			$html = '<h3'.($summary != true ? ' class="dwc-fake-header"' : '').'>Lithostratigraphy</h3>'.$html;
+
+	  return $html;
 	}
 
-	public function term_formation_add_html( $html ) {
-		$html .= '';
-	    return $html;
+	public function add_taxon_helper( $html, $user_access ) {
+		if ($user_access != 'guest') {
+			$html = '<button type="button" id="dwc-improve-fossil-taxon-open" class="btn btn-info dwc-helper improve-fossil-taxon_open">
+	                    <i class="fa fa-fw fa-magic"></i>
+	                    Taxon Wizard
+	                </button><!-- test-->
+	                <div id="dwc-improve-fossil-taxon" class="edit-fossil-popup">
+		                <div class="edit-fossil">
+		                    <div class="edit-fossil-heading">
+		                        <h4>Taxonomy</h4>
+		                    </div>
+		                    <div class="edit-fossil-body">
+		                        <!--<form class="form">-->
+		                            <div class="form-group">
+		                                <label class="control-label">Taxon</label>
+		                                <input
+		                                    class="form-control"
+		                                    id="dwc-edit-fossil-taxon-name"
+		                                    placeholder="Begin typing your Taxon"
+		                                    type="text"
+		                                />
+		                            </div>
+		                        <!--</form>-->
+		                    </div>
+		                    <div class="edit-fossil-footer">
+		                        <ul id="edit-fossil-taxon-results">
+		                        </ul>
+		                    </div>
+		                </div>
+		            </div>';
+		}
+    return $html;
 	}
-
-	public function term_member_add_html( $html ) {
-		$html .= '';
-	    return $html;
-	}
-
-	public function add_taxon_helper( $html ) {
-		$html = '<button type="button" id="dwc-improve-fossil-taxon-open" class="btn btn-info dwc-helper improve-fossil-taxon_open">
-                    <i class="fa fa-fw fa-magic"></i>
-                    Taxon Wizard
-                </button><!-- test-->
-                <div id="dwc-improve-fossil-taxon" class="edit-fossil-popup">
-	                <div class="edit-fossil">
-	                    <div class="edit-fossil-heading">
-	                        <h4>Taxonomy</h4>
-	                    </div>
-	                    <div class="edit-fossil-body">
-	                        <!--<form class="form">-->
-	                            <div class="form-group">
-	                                <label class="control-label">Taxon</label>
-	                                <input
-	                                    class="form-control"
-	                                    id="dwc-edit-fossil-taxon-name"
-	                                    placeholder="Begin typing your Taxon"
-	                                    type="text"
-	                                />
-	                            </div>
-	                        <!--</form>-->
-	                    </div>
-	                    <div class="edit-fossil-footer">
-	                        <ul id="edit-fossil-taxon-results">
-	                        </ul>
-	                    </div>
-	                </div>
-	            </div>';
-	    return $html;
-	}
-
-	public function add_location_helper( $html ) {
-		$html = '<button type="button" id="dwc-improve-fossil-location" class="btn btn-info dwc-helper">
+/*
+	public function add_location_helper( $html, $user_access ) {
+		if ($user_access != 'guest') {
+			$html = '<button type="button" id="dwc-improve-fossil-location" class="btn btn-info dwc-helper">
                     <i class="fa fa-fw fa-magic"></i>
                     Improve Location
                 </button>';
-	    return $html;
+		}
+    return $html;
 	}
-
-	public function alter_owner_location_html( $html, $meta_key ) {
+*/
+	public function alter_owner_location_html( $html, $meta_key, $user_access ) {
 		$html .= '<div style="height:300px;margin:20px;" id="dwc-fossil-map-container"></div>';
-		
+
 	    return $html;
 	}
 
-	public function alter_guest_location_html( $html, $meta_key ) {
-		if ($meta_key['terms']['disclosed']['value'] == 'true') {
-			if (empty( $meta_key['terms']['decimalLatitude']['value'] ) || empty( $meta_key['terms']['decimalLongitude']['value'] ) ) {
-				$html .= "<p>Latitude and Longitude must be entered to display the map.</p>";
-			} else {
-				$html .= '<div style="height:300px;margin:20px;" id="dwc-fossil-map-container"></div>';
+	public function alter_location_html( $html, $meta_key, $user_access ) {
+		if ($user_access != 'guest') {
+			$html .= '<div style="height:300px;margin:20px;" id="dwc-fossil-map-container"></div>';
+		} else {
+			if ($meta_key['terms']['disclosed']['value'] == 'true') {
+				if (empty( $meta_key['terms']['decimalLatitude']['value'] ) || empty( $meta_key['terms']['decimalLongitude']['value'] ) ) {
+					$html .= "<p>Latitude and Longitude must be entered to display the map.</p>";
+				} else {
+					$html .= '<div style="height:300px;margin:20px;" id="dwc-fossil-map-container"></div>';
+				}
+			}
+			else {
+				$html = "<p>The owner of this entry has chosen not to disclose the location.</p>";
 			}
 		}
-		else {
-			$html = "<p>The owner of this entry has chosen not to disclose the location.</p>";
-		}
-	    return $html;
+		return $html;
 	}
 
-	public function add_geochronology_helper( $html ) {
-		$html = '<button type="button" id="improve-fossil-geochronolgy-open" class="btn btn-info dwc-helper improve-fossil-geochronology_open dwc-helper">
+	public function add_geologicalContext_helper( $html, $user_access ) {
+		if ($user_access != 'guest') {
+			$html = '<button type="button" id="improve-fossil-geochronolgy-open" class="btn btn-info dwc-helper improve-fossil-geologicalContext_open">
                     <i class="fa fa-fw fa-magic"></i>
                     Geochronology Wizard
                 </button>
-	            <div id="improve-fossil-geochronology" class="edit-fossil-popup">
+	            <div id="improve-fossil-geologicalContext" class="edit-fossil-popup">
 	                <div class="edit-fossil">
 	                    <div class="edit-fossil-heading">
 	                        <h4>Geochronology</h4>
@@ -589,7 +1382,7 @@ final class darwin_core {
 	                        <!--<form class="form">-->
 	                            <div class="form-group">
 	                                <label class="control-label">Time Interval</label>
-	                                <select class="form-control" id="dwc-edit-fossil-geochronology">
+	                                <select class="form-control" id="dwc-edit-fossil-geologicalContext">
 	                                </select>
 	                            </div>
 	                        <!--</form>-->
@@ -598,7 +1391,8 @@ final class darwin_core {
 	                    </div>
 	                </div>
 	            </div>';
-	    return $html;
+		}
+    return $html;
 	}
 
     public function bp_add_dwc_nav_items()
@@ -613,7 +1407,7 @@ final class darwin_core {
                 'parent_url' => bp_displayed_user_domain(),
                 'parent_slug' => $bp->members->slug . bp_displayed_user_id(),
                 'position' => 70,
-                'show_for_displayed_user' => true,	
+                'show_for_displayed_user' => true,
                 'screen_function' => array( $this, 'bp_display_specimen_page')
             )
         );
@@ -639,39 +1433,42 @@ final class darwin_core {
 				<div class="row">
 					<div class="col-xs-2 col-xs-offset-10">
 						<?php wp_nonce_field('dwc_create_specimen_ajax', 'dwc_create_specimen_nonce'); ?>
-						<a href="/darwin-core-wizard" class="btn btn-primary ajax-btn">New Specimen</a>
+						<a href="/create-specimen" class="btn btn-primary ajax-btn">New Specimen</a>
 					</div>
 				</div>
 			<?php endif; ?>
 				<div class="row">
 					<div class="col-xs-12">
 					<?php
-					
+
 					//$paged = ( get_query_var('paged') ) ? get_query_var('paged') : 1;
-					$wp_query = new WP_Query( array( 
-						'author' => get_current_user_id(),
+					$post_status = (bp_displayed_user_id() == get_current_user_id() || current_user_can('administrator')) ? array('publish', 'draft') : 'publish';
+					$query_args = array(
+						'author' =>  bp_displayed_user_id(),
 						'post_type' => 'dwc_specimen',
 						'posts_per_page' => -1,
-						'post_status' => 'any'
-					) );
+						'post_status' => $post_status
+					);
+
+					$wp_query = new WP_Query( $query_args );
+
 					global $post;
-					if ( $wp_query->have_posts() ) { 
-						echo "<table id='specimen-archive-list'><th>&nbsp;</th><th>Taxon</th><th>Location</th><th>Geochronology</th><th>Lithostratigraphy</th>";
+					if ( $wp_query->have_posts() ) {
+						echo "<table id='specimen-archive-list'><th>&nbsp;</th><th>Taxon</th><th>Location</th><th>Geological Context</th>";
 						while ( $wp_query->have_posts() ) :
-							$wp_query->the_post(); 
+							$wp_query->the_post();
 							$specimen = new DarwinCoreSpecimen( get_the_ID() ); ?>
 							<tr class="hover-hand" data-href="<?= get_post_type_archive_link(DarwinCoreSpecimen::POST_TYPE) ?><?= the_id() ?>/">
 								<td><?php darwin_core::specimen_featured_thumbnail( get_the_ID() ); ?><p><?= get_the_title() ?><br />by <a href="<?= bp_core_get_user_domain( get_the_author_meta( 'ID' ) ) ?>"><?= get_the_author() ?></a></p></td>
 								<td><?php $specimen->display_precise_meta( 'Taxon', 3 ); ?></td>
 								<td><?php $specimen->display_precise_meta( 'Location', 2 ); ?></td>
-								<td><?php $specimen->display_precise_meta( 'Geochronology', 1 ); ?></td>
-								<td><?php $specimen->display_precise_meta( 'Lithostratigraphy', 3 ); ?></td>
+								<td><?php $specimen->display_precise_meta( 'GeologicalContext', 3 ); ?></td>
 					  		</tr>
-						<?php 
+						<?php
 						endwhile;
-						
+
 						echo "</table>";
-						
+
 					} else {
 						?>
 					  <h1>Sorry...</h1>
@@ -708,7 +1505,7 @@ final class darwin_core {
 		$org = array();
 		$class_layout = array();
 
-        $classes = $wpdb->get_results( "SELECT " . 
+        $classes = $wpdb->get_results( "SELECT " .
             $classes_table_name . ".classID, " .
             $classes_table_name . ".className, " .
             $classes_table_name . ".displayName AS 'classDisplayName', " .
@@ -726,6 +1523,11 @@ final class darwin_core {
 			$class_layout[2] = array();
         	$flag = true;
 
+				echo "<!--<form id='dwc-ingest-myfossil-form'><input type='hidden' name='action' value='ingest_myfossil_specimens' />".wp_nonce_field('ingest_myfossil_specimens', 'ingest_myfossil_specimens_nonce', true, false)."<a id='dwc-ingest-myfossil' href='#' class='btn btn-primary ajax-btn'>Ingest myfossil_specimens</a></form>-->";
+				echo "<form id='dwc-publish-image-specimens-form'><input type='hidden' name='action' value='publish_image_specimens' />".wp_nonce_field('publish_image_specimens', 'publish_image_specimens_nonce', true, false)."<a id='dwc-publish-image-specimens' href='#' class='btn btn-primary ajax-btn'>Publish Image Specimens</a></form>";
+				echo "<form id='dwc-create-bp-activity-form'><input type='hidden' name='action' value='historic_bp_activity' />".wp_nonce_field('historic_bp_activity', 'historic_bp_activity_nonce', true, false)."<a id='dwc-create-bp-activity' href='#' class='btn btn-primary ajax-btn'>Create BP Activity</a></form>";
+				echo "<form id='dwc-set-specimen-post-content-form'><input type='hidden' name='action' value='set_specimen_post_content' />".wp_nonce_field('set_specimen_post_content', 'set_specimen_post_content_nonce', true, false)."<a id='dwc-set-specimen-post-content' href='#' class='btn btn-primary ajax-btn'>Set Specimen Post Content</a></form>";
+
 		    echo "<form method='post' action='".esc_url( admin_url('admin-post.php') )."'>
 	        	<input type='hidden' name='action' value='dwc_update_classes' />";
 		    wp_nonce_field('dwc_update_classes_post', 'dwc_update_classes_nonce');
@@ -736,7 +1538,7 @@ final class darwin_core {
 	        	$matrix = explode(',', $current['layout']);
 	        	if ($matrix[0] == 0)
 		        	$class_layout[$matrix[0]][(count($class_layout[0])+1)] = $current;
-		        else 
+		        else
 		        	$class_layout[$matrix[0]][$matrix[1]] = $current;
 
 	        	echo "<tr class='".(($flag = !$flag) ? 'row-even' : 'row-odd')."'>
@@ -768,81 +1570,81 @@ final class darwin_core {
 	        	</form>";
 		}
 		else if ($tab == 'second') {
-	        $enabled_terms = $wpdb->get_results( "SELECT " . 
-	            $classes_table_name . ".className, " .
-	            $classes_table_name . ".displayName AS 'classDisplayName', " .
-	            $classes_table_name . ".layout, " .
-	            $terms_table_name . ".termID, " .
-	            $terms_table_name . ".termName, " .
-	            $terms_table_name . ".displayName, " .
-	            $terms_table_name . ".valueType, " .
-	            $terms_table_name . ".enabled, " .
-	            $terms_table_name . ".layoutParent, " .
-	            $terms_table_name . ".layoutOrder FROM " .
-	            $classes_table_name . " INNER JOIN " . $terms_table_name . " ON " .
-	            $classes_table_name . ".classID=" . $terms_table_name . ".layoutParent ORDER BY " .
-	            $terms_table_name . ".layoutParent ASC, " .
-	            $terms_table_name . ".layoutOrder ASC;", 'ARRAY_A' );
+      $enabled_terms = $wpdb->get_results( "SELECT " .
+        $classes_table_name . ".className, " .
+        $classes_table_name . ".displayName AS 'classDisplayName', " .
+        $classes_table_name . ".layout, " .
+        $terms_table_name . ".termID, " .
+        $terms_table_name . ".termName, " .
+        $terms_table_name . ".displayName, " .
+        $terms_table_name . ".valueType, " .
+        $terms_table_name . ".enabled, " .
+        $terms_table_name . ".layoutParent, " .
+        $terms_table_name . ".layoutOrder FROM " .
+        $classes_table_name . " INNER JOIN " . $terms_table_name . " ON " .
+        $classes_table_name . ".classID=" . $terms_table_name . ".layoutParent ORDER BY " .
+        $terms_table_name . ".layoutParent ASC, " .
+        $terms_table_name . ".layoutOrder ASC;", 'ARRAY_A' );
 
-	        foreach ($enabled_terms as $current) {
-	        	$org[$current['layoutParent']]['children'][] = $current;
-	        }
+      foreach ($enabled_terms as $current) {
+      	$org[$current['layoutParent']]['children'][] = $current;
+      }
 
-        	$flag = true;
+    	$flag = true;
 
-		    echo "<div class='dwc-admin-tab'><form method='post' action='".esc_url( admin_url('admin-post.php') )."'>
-	        	<input type='hidden' name='action' value='dwc_update_terms' />";
-		    wp_nonce_field('dwc_update_terms_post', 'dwc_update_terms_nonce');
+	    echo "<div class='dwc-admin-tab'><form method='post' action='".esc_url( admin_url('admin-post.php') )."'>
+        	<input type='hidden' name='action' value='dwc_update_terms' />";
+	    wp_nonce_field('dwc_update_terms_post', 'dwc_update_terms_nonce');
 
-	        foreach ($org as $class_id => $values) {
-	        	echo "<h1>".$values['parent']['classDisplayName']."</h1>
-	        		<table id='dwc-terms' class='dwc-terms'><thead><tr><th>Term Name</th><th>Display Name</th><th>Value Type</th><th>Enabled</th></tr></thead><tbody id='".$class_id."'>";
+      foreach ($org as $class_id => $values) {
+      	echo "<h1>".$values['parent']['classDisplayName']."</h1>
+      		<table id='dwc-terms' class='dwc-terms'><thead><tr><th>Term Name</th><th>Display Name</th><th>Value Type</th><th>Enabled</th></tr></thead><tbody id='".$class_id."'>";
 
-	        	if (isset($values['children']))	{
-		        	foreach ($values['children'] as $current) {
-		        		echo "<tr class='".(($flag = !$flag) ? 'row-even' : 'row-odd')."'>
-				        	<td><input type='text' name='termName[".$current['termID']."]' value='".$current['termName']."' /></td>
-				        	<td><input type='text' name='displayName[".$current['termID']."]' value='".$current['displayName']."' /></td>
-				        	<td>".$this->display_value_type($current)."</td>
-				        	<td><input type='checkbox' name='enabled[".$current['termID']."]' value='true' ".(($current['enabled'] == true) ? 'checked' : '')." /></td>
-				        	<td>
-				        	<input class='layout-parent' type='hidden' name='layoutParent[".$current['termID']."]' value='".$current['layoutParent']."' />
-				        	<input class='layout-order' type='hidden' name='layoutOrder[".$current['termID']."]' value='".$current['layoutOrder']."' />
-				        	</td>
-				        	</tr>";
-		        	}
-		        }
-		        else {
-		        	echo "<tr class='dwc-term-placeholder'><td></td><td></td><td></td><td></td></tr>";
-		        }
-
-        		echo "</tbody><tfoot><tr class='".(($flag = !$flag) ? 'row-even' : 'row-odd')."'>
-		        	<td><input type='text' name='termName[new_".$class_id."]' value='' placeholder='Add Term Name' /></td>
-		        	<td><input type='text' name='displayName[new_".$class_id."]' value='' placeholder='Add Display Name' /></td>
-		        	<td>".$this->display_value_type(array('termID' => "new_".$class_id, 'valueType' => 'text'))."</td>
-		        	<td><input type='checkbox' name='enabled[new_".$class_id."]' value='true' /></td>
+      	if (isset($values['children']))	{
+        	foreach ($values['children'] as $current) {
+        		echo "<tr class='".(($flag = !$flag) ? 'row-even' : 'row-odd')."'>
+		        	<td><input type='text' name='termName[".$current['termID']."]' value='".$current['termName']."' /></td>
+		        	<td><input type='text' name='displayName[".$current['termID']."]' value='".$current['displayName']."' /></td>
+		        	<td>".$this->display_value_type($current)."</td>
+		        	<td><input type='checkbox' name='enabled[".$current['termID']."]' value='true' ".(($current['enabled'] == true) ? 'checked' : '')." /></td>
 		        	<td>
-		        	<input class='layout-parent' type='hidden' name='layoutParent[new_".$class_id."]' value='".$class_id."' />
-			        <input class='new-layout-order-".$class_id."' type='hidden' name='layoutOrder[new_".$class_id."]' value='".++$current['layoutOrder']."' />
+		        	<input class='layout-parent' type='hidden' name='layoutParent[".$current['termID']."]' value='".$current['layoutParent']."' />
+		        	<input class='layout-order' type='hidden' name='layoutOrder[".$current['termID']."]' value='".$current['layoutOrder']."' />
 		        	</td>
-		        	</tr></tfoot></table>";
-	        }
+		        	</tr>";
+        	}
+        }
+        else {
+        	echo "<tr class='dwc-term-placeholder'><td></td><td></td><td></td><td></td></tr>";
+        }
+
+    		echo "</tbody><tfoot><tr class='".(($flag = !$flag) ? 'row-even' : 'row-odd')."'>
+        	<td><input type='text' name='termName[new_".$class_id."]' value='' placeholder='Add Term Name' /></td>
+        	<td><input type='text' name='displayName[new_".$class_id."]' value='' placeholder='Add Display Name' /></td>
+        	<td>".$this->display_value_type(array('termID' => "new_".$class_id, 'valueType' => 'text'))."</td>
+        	<td><input type='checkbox' name='enabled[new_".$class_id."]' value='true' /></td>
+        	<td>
+        	<input class='layout-parent' type='hidden' name='layoutParent[new_".$class_id."]' value='".$class_id."' />
+	        <input class='new-layout-order-".$class_id."' type='hidden' name='layoutOrder[new_".$class_id."]' value='".++$current['layoutOrder']."' />
+        	</td>
+        	</tr></tfoot></table>";
+      }
 			echo "<input class='btn btn-primary' type='submit' name='update' value='Save' /></form></div>";
 		}
 	}
 
 	public function options_page_tabs($current = 'first') {
-	    $tabs = array(
-	        'first'   => __("Classes", 'plugin-textdomain'), 
-	        'second'  => __("Terms", 'plugin-textdomain')
-	    );
-	    $html =  '<h2 class="nav-tab-wrapper">';
-	    foreach( $tabs as $tab => $name ){
-	        $class = ($tab == $current) ? 'nav-tab-active' : '';
-	        $html .=  '<a class="nav-tab ' . $class . '" href="options-general.php?page=darwin-core-terms&tab=' . $tab . '">' . $name . '</a>';
-	    }
-	    $html .= '</h2>';
-	    echo $html;
+    $tabs = array(
+      'first'   => __("Classes", 'plugin-textdomain'),
+      'second'  => __("Terms", 'plugin-textdomain')
+    );
+    $html =  '<h2 class="nav-tab-wrapper">';
+    foreach( $tabs as $tab => $name ){
+      $class = ($tab == $current) ? 'nav-tab-active' : '';
+      $html .=  '<a class="nav-tab ' . $class . '" href="options-general.php?page=darwin-core-terms&tab=' . $tab . '">' . $name . '</a>';
+    }
+    $html .= '</h2>';
+    echo $html;
 	}
 
 	private function display_value_type($selection) {
@@ -857,12 +1659,11 @@ final class darwin_core {
 	}
 
 	public function darwin_core_ajaxurl() {
-
-	   echo '<script type="text/javascript">
-	           var ajaxurl = "' . admin_url('admin-ajax.php') . '";
-	         </script>';
+		echo '<script type="text/javascript">
+			      var ajaxurl = "' . admin_url('admin-ajax.php') . '";
+			    </script>';
 	}
-/*
+	/*
     public function bp_add_dwc_nav_items()
     {
         global $bp;
@@ -880,32 +1681,7 @@ final class darwin_core {
             )
         );
     }
-*/
-    public function darwin_core_scripts() {
-    	wp_enqueue_script( 'jquery' );
-   		//wp_enqueue_style( 'bootstrap', '//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css' );
-    	//wp_enqueue_script( 'bootstrap-js', '//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js', array('jquery'), true);
-    	wp_enqueue_style( 'darwin-core-css', plugins_url( '/style.css', __FILE__ ), array(), '1.0' );
-    	wp_enqueue_script( 'darwin-core-js', plugins_url( '/scripts.js', __FILE__ ), array(), '1.0'  );
-    	wp_enqueue_script( 'googlemaps', '//maps.googleapis.com/maps/api/js?key=AIzaSyCiawlM6d6FHKwLVNKP8eaO9eaug8DUSbk', array( 'jquery' ) );
-    	wp_enqueue_script( 'popup-overlay-js', '//cdn.rawgit.com/vast-engineering/jquery-popup-overlay/1.7.13/jquery.popupoverlay.js', array( 'jquery' ) );
-    }
-
-    public function darwin_core_localize_scripts() {
-    	$image_url = plugins_url( 'images/updating.gif', __FILE__ );
-	    $localizations = array( 'loadingGifURL' => $image_url );
-
-	    wp_localize_script( 'darwin-core-js', 'localizedVars', $localizations );
-
-    }
-
-    public function darwin_core_admin_scripts() {
-    	wp_enqueue_style( 'darwin-core-admin-css', plugins_url( '/admin-style.css', __FILE__ ) );
-    	wp_enqueue_script( 'jquery' );
-    	wp_enqueue_script( 'jquery-ui-core' );
-    	wp_enqueue_script( 'jquery-ui-sortable' );
-    	wp_enqueue_script( 'darwin-core-admin-js', plugins_url( '/admin-scripts.js', __FILE__ ) );
-    }
+	*/
 
 	static function darwin_core_install() {
 		global $wpdb;
@@ -914,7 +1690,7 @@ final class darwin_core {
 		$classes_table_name = $wpdb->prefix . 'darwin_core_classes';
 		$terms_table_name = $wpdb->prefix . 'darwin_core_terms';
 		$vocabulary_table_name = $wpdb->prefix . 'darwin_core_vocabulary';
-		
+
 		$charset_collate = $wpdb->get_charset_collate();
 
 		$classes_sql = "CREATE TABLE $classes_table_name (
@@ -931,7 +1707,7 @@ final class darwin_core {
 			termName varchar(55) DEFAULT '' NOT NULL,
 			displayName varchar(55) DEFAULT '' NOT NULL,
 			valueType varchar(55) DEFAULT 'text' NOT NULL,
-			class mediumint(9) NOT NULL, 
+			class mediumint(9) NOT NULL,
 			enabled boolean NOT NULL,
 			core boolean DEFAULT true NOT NULL,
 			layoutParent smallint(3) DEFAULT 0 NOT NULL,
@@ -953,7 +1729,7 @@ final class darwin_core {
 		dbDelta( $vocabulary_sql );
 
 		add_option( 'darwin_core_db_version', $darwin_core_db_version );
-		
+
 
 		if ( post_exists("Darwin Core Wizard") === 0 ) {
 			$post = array(
@@ -965,7 +1741,7 @@ final class darwin_core {
 		          'post_status' => 'publish' ,
 		          'post_title' => 'Darwin Core Wizard',
 		          'post_type' => 'page',
-		    );  
+		    );
 		    //insert page and save the id
 		    $newvalue = wp_insert_post( $post, false );
 		}
@@ -973,7 +1749,7 @@ final class darwin_core {
 
 	static function darwin_core_install_data() {
 		global $wpdb;
-		
+
 		$classes_table_name = $wpdb->prefix . 'darwin_core_classes';
 		$terms_table_name = $wpdb->prefix . 'darwin_core_terms';
 		$vocabulary_table_name = $wpdb->prefix . 'darwin_core_vocabulary';
@@ -1191,22 +1967,22 @@ final class darwin_core {
 
 		$layout_count = 0;
 		foreach ($input as $class_key => $class_value) {
-			$wpdb->insert( 
-				$classes_table_name, 
-				array( 
+			$wpdb->insert(
+				$classes_table_name,
+				array(
 					'className' => $class_key,
 					'displayName' => $class_value[0],
 					'layout' => '1,' . ++$layout_count
-				) 
+				)
 			);
 
 			$classID = $wpdb->insert_id;
 
 			$order_count = 0;
 			foreach ($class_value[1] as $key => $value) {
-				$wpdb->insert( 
-					$terms_table_name, 
-					array( 
+				$wpdb->insert(
+					$terms_table_name,
+					array(
 						'termName' => $key,
 						'displayName' => $value[0],
 						'valueType' => $value[1],
@@ -1214,20 +1990,20 @@ final class darwin_core {
 						'enabled' => $value[2],
 						'layoutParent' => $classID,
 						'layoutOrder' => ++$order_count
-					) 
+					)
 				);
 
 				$termID = $wpdb->insert_id;
 
 				if (isset($vocab[$key])) {
 					foreach($vocab[$key] as $vocab => $display_vocab) {
-						$wpdb->insert( 
-							$vocabulary_table_name, 
-							array( 
+						$wpdb->insert(
+							$vocabulary_table_name,
+							array(
 								'termID' => $termID,
 								'vocab' => $vocab,
 								'displayVocab' => $display_vocab
-							) 
+							)
 						);
 					}
 				}
@@ -1235,16 +2011,20 @@ final class darwin_core {
 		}
 	}
 
+	static function darwin_core_add_curator_role() {
+		add_role( 'dwc_curator', 'Curator', array( 'read' => true, 'edit_posts' => true ) );
+	}
+
 	public function process_dwc_update_classes() {
         if ( wp_verify_nonce( $_POST['dwc_update_classes_nonce'], 'dwc_update_classes_post' ) ) {
 			global $wpdb;
-	        
+
 	        $classes_table_name = $wpdb->prefix . 'darwin_core_classes';
 
         	foreach ($_POST['className'] as $id => $current) {
         		if ($id == 0) {
         			if ($_POST['className'][0] != '' && $_POST['displayName'][0] != '') {
-        				
+
         				$highest_layout = $wpdb->get_results("SELECT " .
         					$classes_table_name.".layout FROM " .
         					$classes_table_name." WHERE " .
@@ -1257,28 +2037,28 @@ final class darwin_core {
         					$layout_row = ($matrix[1] > $layout_row) ? $matrix[1] : $layout_row;
         				}
 
-	        			$wpdb->insert( 
-							$classes_table_name, 
-							array( 
+	        			$wpdb->insert(
+							$classes_table_name,
+							array(
 								'className' => $_POST['className'][0],
 								'displayName' => $_POST['displayName'][0],
 								'layout' => (($_POST['layout'][0] != '') ? $_POST['layout'][0] : '1,'.++$layout_row),
 								'core' => 0
-							) 
+							)
 						);
 	        		}
-        		} 
+        		}
         		else {
-	        		$wpdb->update( $classes_table_name, 
+	        		$wpdb->update( $classes_table_name,
 	        			array(
 		        			'className' => $current,
 		        			'displayName' => $_POST['displayName'][$id],
 		        			'layout' => $_POST['layout'][$id]
-		        		), 
+		        		),
 		        		array(
 		        			'classID' => $id
 		        		),
-		        		array('%s', '%s', '%s'), 
+		        		array('%s', '%s', '%s'),
 		        		'%d'
 		        	);
 	        	}
@@ -1289,23 +2069,23 @@ final class darwin_core {
 	}
 
 	public function process_dwc_update_terms() {
-        if ( wp_verify_nonce( $_POST['dwc_update_terms_nonce'], 'dwc_update_terms_post' ) ) {
+    if ( wp_verify_nonce( $_POST['dwc_update_terms_nonce'], 'dwc_update_terms_post' ) ) {
 			global $wpdb;
 	        $terms_table_name = $wpdb->prefix . 'darwin_core_terms';
 
         	foreach ($_POST['termName'] as $id => $current) {
         		if (strpos($id, 'new') !== false) {
         			if ($_POST['termName'][$id] != '' && $_POST['displayName'][$id] != '') {
-        				
+
         				$highest_layout = $wpdb->get_results("SELECT " .
         					$terms_table_name.".layoutOrder FROM " .
         					$terms_table_name." WHERE " .
         					$terms_table_name.".layoutParent=".$_POST['layoutParent'][$id]." ORDER BY " .
         					$terms_table_name.".layoutOrder DESC LIMIT 1;", 'ARRAY_A');
 
-        				$wpdb->insert( 
-							$terms_table_name, 
-							array( 
+        				$wpdb->insert(
+							$terms_table_name,
+							array(
 								'termName' => $_POST['termName'][$id],
 								'displayName' => $_POST['displayName'][$id],
 								'valueType' => $_POST['valueType'][$id],
@@ -1314,12 +2094,12 @@ final class darwin_core {
 								'core' => 0,
 								'layoutParent' => $_POST['layoutParent'][$id],
 								'layoutOrder' => ++$highest_layout[0]['layoutOrder']
-							) 
+							)
 						);
         			}
-        		} 
+        		}
         		else {
-	        		$wpdb->update( $terms_table_name, 
+	        		$wpdb->update( $terms_table_name,
 	        			array(
 		        			'termName' => $current,
 		        			'displayName' => $_POST['displayName'][$id],
@@ -1327,11 +2107,11 @@ final class darwin_core {
 		        			'layoutParent' => $_POST['layoutParent'][$id],
 		        			'layoutOrder' => $_POST['layoutOrder'][$id],
 		        			'enabled' => ((isset($_POST['enabled'][$id]) && $_POST['enabled'][$id] == 'true') ? 1 : 0 )
-		        		), 
+		        		),
 		        		array(
 		        			'termID' => $id
 		        		),
-		        		array('%s', '%s', '%s', '%d', '%d', '%d', '%d'), 
+		        		array('%s', '%s', '%s', '%d', '%d', '%d'),
 		        		'%d'
 		        	);
 	        	}
@@ -1347,6 +2127,10 @@ $classes_table_name = $wpdb->prefix . 'darwin_core_classes';
 if($wpdb->get_var("show tables like '$classes_table_name'") != $classes_table_name) {
 	register_activation_hook( __FILE__, array( 'darwin_core', 'darwin_core_install' ) );
 	register_activation_hook( __FILE__, array( 'darwin_core', 'darwin_core_install_data' ) );
+}
+
+if ( !wp_roles()->is_role( 'dwc_curator' ) ) {
+	register_activation_hook( __FILE__, array( 'darwin_core', 'darwin_core_add_curator_role' ) );
 }
 
 /**
